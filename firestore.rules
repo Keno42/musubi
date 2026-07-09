@@ -1,0 +1,65 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // v2.5: admin判定は簡易でよい方式(handoff sec.7)を採用。
+    // 運営メールアドレスをここに列挙する。
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email in [
+        'keno42@gmail.com'
+      ];
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // needsPublic: サポーターにも見せてよい情報のみ。個人情報は入れない。
+    match /needsPublic/{needId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.createdByUid == request.auth.uid;
+      allow update, delete: if isAdmin() || isOwner(resource.data.createdByUid);
+    }
+
+    // needsPrivate: 管理者のみ読み書き可(作成時のみ本人の書き込みを許可)。
+    match /needsPrivate/{needId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn() && request.resource.data.createdByUid == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // offers: 作成は本人。読み取りは本人と管理者。statusの変更は管理者のみ。
+    match /offers/{offerId} {
+      allow read: if isAdmin() || isOwner(resource.data.createdByUid);
+      allow create: if isSignedIn() && request.resource.data.createdByUid == request.auth.uid
+                    && request.resource.data.status == 'submitted';
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // matchings: 作成・更新は管理者のみ。読み取りは当事者(needの作成者・offerのサポーター)と管理者。
+    match /matchings/{matchingId} {
+      allow read: if isAdmin() || (isSignedIn() && (
+        get(/databases/$(database)/documents/needsPrivate/$(resource.data.needId)).data.createdByUid == request.auth.uid ||
+        get(/databases/$(database)/documents/offers/$(resource.data.offerId)).data.createdByUid == request.auth.uid
+      ));
+      allow write: if isAdmin();
+    }
+
+    // matchDetails: マッチング成立後、サポーター側に見せてよい確定情報(詳細住所など)。
+    // 「offerがapprovedならneedsPrivate全体を読ませる」ような雑な開け方を避けるため、
+    // 管理者がマッチング成立時にこのドキュメントだけを作る方式(handoff sec.11の推奨実装)。
+    match /matchDetails/{matchingId} {
+      allow read: if isAdmin() || (isSignedIn() && (
+        get(/databases/$(database)/documents/needsPrivate/$(get(/databases/$(database)/documents/matchings/$(matchingId)).data.needId)).data.createdByUid == request.auth.uid ||
+        get(/databases/$(database)/documents/offers/$(get(/databases/$(database)/documents/matchings/$(matchingId)).data.offerId)).data.createdByUid == request.auth.uid
+      ));
+      allow write: if isAdmin();
+    }
+  }
+}
