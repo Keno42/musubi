@@ -43,7 +43,32 @@ To point the app at emulators during `npm run dev`, set `VITE_USE_EMULATORS=true
 
 ## Deploy
 
+Hosting deploys automatically via GitHub Actions on every push to `main` (see
+`.github/workflows/firebase-hosting-merge.yml`). PRs get their own preview channel
+via `.github/workflows/firebase-hosting-pull-request.yml`.
+
+Firestore rules are **not** auto-deployed (the CI service account only has Hosting
+Admin permission) — after changing `firestore.rules`, deploy manually:
+
+```sh
+firebase deploy --only firestore:rules
+```
+
+To deploy everything manually:
+
 ```sh
 npm run build
 firebase deploy
 ```
+
+### API key restriction and PR previews
+
+The Firebase Web SDK apiKey is restricted (Google Cloud Console → APIs & Services →
+Credentials) to only accept requests referred from `https://musubi-6fff3.web.app/*`.
+This means logging in on a PR preview URL (`https://musubi-6fff3--<channel>.web.app`)
+against the live backend will fail auth/Firestore calls, since its referrer won't match.
+
+If you need to test a PR preview against the live backend, temporarily add its exact
+URL (find it in the PR's bot comment or the workflow run output) as another allowed
+referrer, then remove it once done. Otherwise, test PR previews via the Emulator Suite,
+or skip auth-dependent flows on previews.
