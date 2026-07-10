@@ -13,9 +13,11 @@ const SUPPORT_CATEGORIES = [
 ];
 
 const STATUS_LABEL = {
-  open: 'ニーズを受け付けました。現在、サポーターからの応募または管理者確認を待っています。',
+  open: 'おねがいを受け付けました。現在、サポーターからの応募または管理者の確認を待っています。',
   matched: 'マッチングが成立しました。本番では、登録されたメールアドレス宛に詳細が送信されます。この試作では、画面上で成立状態のみ表示しています。',
 };
+
+const TOTAL_STEPS = 4;
 
 function maxDate() {
   const d = new Date();
@@ -41,7 +43,17 @@ function emptyForm() {
   };
 }
 
-function RegisterForm({ uid, onRegistered }) {
+function StepCard({ step, title, children }) {
+  return (
+    <div className="card">
+      <p className="step-indicator">おねがいの登録 — ステップ {step} / {TOTAL_STEPS}</p>
+      <h2>{title}</h2>
+      {children}
+    </div>
+  );
+}
+
+function RegisterForm({ uid, onDone, onCancel }) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(emptyForm());
   const [submitting, setSubmitting] = useState(false);
@@ -56,95 +68,132 @@ function RegisterForm({ uid, onRegistered }) {
     setError(null);
     try {
       await createNeed(uid, form);
-      setForm(emptyForm());
-      setStep(1);
-      onRegistered();
+      onDone();
     } catch (err) {
       setError(err.message);
-    } finally {
       setSubmitting(false);
     }
   }
 
-  return (
-    <div className="card">
-      <h2>ニーズを登録する</h2>
-
-      {step === 1 && (
-        <fieldset>
-          <legend>希望日時</legend>
+  if (step === 1) {
+    return (
+      <StepCard step={1} title="希望の日時">
+        <div className="field-card">
           <label>
-            希望日
+            希望日(今日から14日先まで)
             <input type="date" min={todayDate()} max={maxDate()} value={form.date} onChange={set('date')} className="input" required />
           </label>
-          <label>
-            希望開始時刻
-            <input type="time" value={form.startTime} onChange={set('startTime')} className="input" required />
-          </label>
-          <label>
-            希望終了時刻
-            <input type="time" value={form.endTime} onChange={set('endTime')} className="input" required />
-          </label>
+        </div>
+        <div className="time-row">
+          <div className="field-card">
+            <label>
+              開始時刻
+              <input type="time" value={form.startTime} onChange={set('startTime')} className="input" required />
+            </label>
+          </div>
+          <div className="field-card">
+            <label>
+              終了時刻
+              <input type="time" value={form.endTime} onChange={set('endTime')} className="input" required />
+            </label>
+          </div>
+        </div>
+        <div className="step-nav">
+          <button className="btn btn--secondary" onClick={onCancel}>やめる</button>
           <button className="btn btn--primary" disabled={!form.date || !form.startTime || !form.endTime} onClick={() => setStep(2)}>次へ</button>
-        </fieldset>
-      )}
+        </div>
+      </StepCard>
+    );
+  }
 
-      {step === 2 && (
-        <fieldset>
-          <legend>支援カテゴリ</legend>
+  if (step === 2) {
+    return (
+      <StepCard step={2} title="どんな外出ですか?">
+        <div className="field-card">
           {SUPPORT_CATEGORIES.map((c) => (
             <label key={c} className="radio-line">
               <input type="radio" name="supportCategory" value={c} checked={form.supportCategory === c} onChange={set('supportCategory')} />
               {c}
             </label>
           ))}
+        </div>
+        <div className="field-card">
           <label>
             付き添いに関する補足(管理者確認用)
             <textarea value={form.publicSummary} onChange={set('publicSummary')} className="input" />
           </label>
+        </div>
+        <div className="step-nav">
           <button className="btn btn--secondary" onClick={() => setStep(1)}>戻る</button>
           <button className="btn btn--primary" onClick={() => setStep(3)}>次へ</button>
-        </fieldset>
-      )}
+        </div>
+      </StepCard>
+    );
+  }
 
-      {step === 3 && (
-        <fieldset>
-          <legend>大まかなエリア</legend>
+  if (step === 3) {
+    return (
+      <StepCard step={3} title="大まかなエリア">
+        <div className="field-card">
           <label>
             例: 西大井3丁目付近(サポーターに表示されます)
             <input type="text" value={form.publicArea} onChange={set('publicArea')} className="input" required />
           </label>
+        </div>
+        <div className="step-nav">
           <button className="btn btn--secondary" onClick={() => setStep(2)}>戻る</button>
           <button className="btn btn--primary" disabled={!form.publicArea} onClick={() => setStep(4)}>次へ</button>
-        </fieldset>
-      )}
+        </div>
+      </StepCard>
+    );
+  }
 
-      {step === 4 && (
-        <fieldset>
-          <legend>詳細情報(管理者のみ閲覧)</legend>
-          <label>
-            詳細住所
-            <input type="text" value={form.privateAddress} onChange={set('privateAddress')} className="input" required />
-          </label>
-          <label>
-            当人の名前
-            <input type="text" value={form.personName} onChange={set('personName')} className="input" required />
-          </label>
-          <label>
-            連絡先メールアドレス
-            <input type="email" value={form.personEmail} onChange={set('personEmail')} className="input" required />
-          </label>
-          {error && <p className="error-text">{error}</p>}
-          <button className="btn btn--secondary" onClick={() => setStep(3)}>戻る</button>
-          <button
-            className="btn btn--primary"
-            disabled={submitting || !form.privateAddress || !form.personName || !form.personEmail}
-            onClick={submit}
-          >
-            {submitting ? '登録中...' : '登録する'}
-          </button>
-        </fieldset>
-      )}
+  return (
+    <StepCard step={4} title="詳細情報(管理者のみ閲覧)">
+      <div className="field-card">
+        <label>
+          詳細住所
+          <input type="text" value={form.privateAddress} onChange={set('privateAddress')} className="input" required />
+        </label>
+      </div>
+      <div className="field-card">
+        <label>
+          当人の名前
+          <input type="text" value={form.personName} onChange={set('personName')} className="input" required />
+        </label>
+      </div>
+      <div className="field-card">
+        <label>
+          連絡先メールアドレス
+          <input type="email" value={form.personEmail} onChange={set('personEmail')} className="input" required />
+        </label>
+      </div>
+      {error && <p className="error-text">{error}</p>}
+      <div className="step-nav">
+        <button className="btn btn--secondary" onClick={() => setStep(3)}>戻る</button>
+        <button
+          className="btn btn--primary"
+          disabled={submitting || !form.privateAddress || !form.personName || !form.personEmail}
+          onClick={submit}
+        >
+          {submitting ? '登録中...' : '登録する'}
+        </button>
+      </div>
+    </StepCard>
+  );
+}
+
+function DoneCard({ onRegisterAnother, onBackToList }) {
+  return (
+    <div className="card done-card">
+      <p className="done-card__mark">✓</p>
+      <h2>おねがいを登録しました</h2>
+      <p>サポーターからの応募と、管理者の確認をお待ちください。</p>
+      <p>マッチングが成立すると、この画面で確認できます。</p>
+      <div className="step-nav">
+        <button className="btn btn--secondary" onClick={onBackToList}>登録状況を見る</button>
+        <button className="btn btn--primary" onClick={onRegisterAnother}>続けて登録する</button>
+      </div>
     </div>
   );
 }
@@ -153,7 +202,7 @@ function MyNeedsList({ needs }) {
   if (needs.length === 0) return null;
   return (
     <div className="card">
-      <h2>登録したニーズ</h2>
+      <h2>登録したおねがい</h2>
       <ul className="status-list">
         {needs.map((n) => (
           <li key={n.id}>
@@ -168,13 +217,11 @@ function MyNeedsList({ needs }) {
 
 function UserHome() {
   const { user } = useAuth();
+  const [view, setView] = useState('home'); // 'home' | 'form' | 'done'
   const [needs, setNeeds] = useState([]);
-  const [loaded, setLoaded] = useState(false);
 
   async function reload() {
-    const list = await fetchMyNeeds(user.uid);
-    setNeeds(list);
-    setLoaded(true);
+    setNeeds(await fetchMyNeeds(user.uid));
   }
 
   useEffect(() => {
@@ -185,9 +232,32 @@ function UserHome() {
 
   return (
     <div className="page">
-      <h1>利用者画面</h1>
-      <RegisterForm uid={user.uid} onRegistered={reload} />
-      {loaded && <MyNeedsList needs={needs} />}
+      <p className="page-header">Musubi — 利用者</p>
+
+      {view === 'form' && (
+        <RegisterForm
+          uid={user.uid}
+          onDone={() => { setView('done'); reload(); }}
+          onCancel={() => setView('home')}
+        />
+      )}
+
+      {view === 'done' && (
+        <DoneCard
+          onRegisterAnother={() => setView('form')}
+          onBackToList={() => setView('home')}
+        />
+      )}
+
+      {view === 'home' && (
+        <>
+          <button className="btn btn--primary btn--large" onClick={() => setView('form')}>
+            おねがいを登録する
+          </button>
+          <MyNeedsList needs={needs} />
+        </>
+      )}
+
       <EmergencyContactFooter />
     </div>
   );

@@ -46,7 +46,7 @@ function AdminHome() {
   if (loadError) {
     return (
       <div className="page">
-        <h1>管理者画面</h1>
+        <p className="page-header">Musubi — 管理者</p>
         <p className="error-text">読み込みに失敗しました: {loadError}</p>
         <p>このメールアドレスが管理者として登録されているか確認してください。</p>
       </div>
@@ -69,7 +69,7 @@ function AdminHome() {
 
   return (
     <div className="page">
-      <h1>管理者画面</h1>
+      <p className="page-header">Musubi — 管理者</p>
 
       {matchedInfo && (
         <div className="card notice-box">
@@ -82,7 +82,7 @@ function AdminHome() {
 
       {!selectedNeed && (
         <>
-          <h2>ニーズ一覧</h2>
+          <h2>おねがい一覧</h2>
           <ul className="status-list">
             {needs.map((n) => (
               <li key={n.id} className="card">
@@ -102,7 +102,7 @@ function AdminHome() {
 
       {selectedNeed && !selectedOffer && (
         <>
-          <button className="btn btn--secondary" onClick={() => setSelectedNeedId(null)}>ニーズ一覧に戻る</button>
+          <button className="btn btn--secondary" onClick={() => setSelectedNeedId(null)}>おねがい一覧に戻る</button>
           <h2>応募一覧</h2>
           {offersForSelected.length === 0 && <p>まだ応募はありません。</p>}
           <ul className="status-list">

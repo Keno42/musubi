@@ -56,6 +56,8 @@ now, record it in a GitHub issue instead of code.
 - Japanese UI. Base font 16px, body text ≥14px, buttons ≥16px and tall,
   generous whitespace, one task per screen, forms revealed step by step.
 - Notice/status wording is **fixed** by the handoff doc §5 — don't paraphrase.
+  One owner-decided exception (2026-07): the UI term for a need is 「おねがい」,
+  never 「ニーズ」. Code and Firestore collections keep their English names.
 - Every logged-in screen shows the emergency contact footer.
 - Design for a nervous first-time user on a phone, not a power user.
 

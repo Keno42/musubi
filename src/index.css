@@ -73,6 +73,59 @@ p {
   margin-bottom: 10px;
 }
 
+.page-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-dark);
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.step-indicator {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-dark);
+  margin: 0 0 4px;
+}
+
+.field-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px 16px;
+  margin: 12px 0;
+}
+
+.field-card label {
+  margin-top: 0;
+}
+
+.time-row {
+  display: flex;
+  gap: 12px;
+}
+
+.time-row .field-card {
+  flex: 1;
+}
+
+.step-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.done-card {
+  text-align: center;
+}
+
+.done-card__mark {
+  font-size: 40px;
+  line-height: 1;
+  color: var(--accent);
+  margin: 4px 0 8px;
+}
+
 label {
   display: block;
   font-size: 15px;

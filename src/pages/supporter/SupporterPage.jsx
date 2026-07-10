@@ -36,7 +36,7 @@ function NeedCard({ need, onApply }) {
 
       {!applying ? (
         <button className="btn btn--primary btn--large" onClick={() => setApplying(true)}>
-          このニーズに応募する
+          このおねがいを手伝う
         </button>
       ) : (
         <form
@@ -129,10 +129,10 @@ function SupporterHome() {
 
   return (
     <div className="page">
-      <h1>サポーター画面</h1>
+      <p className="page-header">Musubi — サポーター</p>
 
-      <h2>募集中のニーズ</h2>
-      {needs.length === 0 && <p>現在募集中のニーズはありません。</p>}
+      <h2>募集中のおねがい</h2>
+      {needs.length === 0 && <p>現在募集中のおねがいはありません。</p>}
       {needs.map((n) => (
         <NeedCard key={n.id} need={n} onApply={handleApply} />
       ))}
