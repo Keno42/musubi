@@ -2,7 +2,33 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/AuthContext';
 import LoginGate from '../../components/LoginGate';
 import EmergencyContactFooter from '../../components/EmergencyContactFooter';
+import { formatDateJa } from '../../lib/format';
 import { fetchAllNeedsForAdmin, fetchAllOffersForAdmin, approveMatch } from '../../lib/firestore';
+
+const NEED_STATUS = {
+  open: { label: '募集中', muted: false },
+  matched: { label: '成立済み', muted: true },
+};
+
+const OFFER_STATUS = {
+  submitted: { label: '確認待ち', muted: false },
+  approved: { label: '承認済み', muted: true },
+  rejected: { label: '見送り', muted: true },
+};
+
+function StatusBadge({ map, status }) {
+  const s = map[status] || { label: status, muted: true };
+  return <span className={s.muted ? 'badge badge--muted' : 'badge'}>{s.label}</span>;
+}
+
+function InfoRow({ name, children }) {
+  return (
+    <div className="field-card">
+      <p className="field-name">{name}</p>
+      <p>{children}</p>
+    </div>
+  );
+}
 
 function AdminHome() {
   const { user } = useAuth();
@@ -11,7 +37,7 @@ function AdminHome() {
   const [selectedNeedId, setSelectedNeedId] = useState(null);
   const [selectedOfferId, setSelectedOfferId] = useState(null);
   const [supplementNote, setSupplementNote] = useState('');
-  const [matchedInfo, setMatchedInfo] = useState(null);
+  const [matched, setMatched] = useState(false);
   const [loadError, setLoadError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -45,11 +71,10 @@ function AdminHome() {
 
   if (loadError) {
     return (
-      <div className="page">
-        <p className="page-header">Musubi — 管理者</p>
+      <>
         <p className="error-text">読み込みに失敗しました: {loadError}</p>
         <p>このメールアドレスが管理者として登録されているか確認してください。</p>
-      </div>
+      </>
     );
   }
 
@@ -57,7 +82,7 @@ function AdminHome() {
     setSubmitting(true);
     try {
       await approveMatch(user.uid, selectedNeed, selectedOffer, supplementNote);
-      setMatchedInfo({ need: selectedNeed, offer: selectedOffer });
+      setMatched(true);
       setSelectedNeedId(null);
       setSelectedOfferId(null);
       setSupplementNote('');
@@ -68,12 +93,11 @@ function AdminHome() {
   }
 
   return (
-    <div className="page">
-      <p className="page-header">Musubi — 管理者</p>
-
-      {matchedInfo && (
-        <div className="card notice-box">
-          <p>マッチングが成立しました。</p>
+    <>
+      {matched && (
+        <div className="card done-card">
+          <p className="done-card__mark">✓</p>
+          <h2>マッチングが成立しました</h2>
           <p>本番では、利用者とサポーターの双方にメールが送信されます。</p>
           <p>この試作ではメールは送信されません。</p>
           <p>利用者・サポーターは、画面を再読み込みすると確定情報を確認できます。</p>
@@ -83,15 +107,16 @@ function AdminHome() {
       {!selectedNeed && (
         <>
           <h2>おねがい一覧</h2>
+          {needs.length === 0 && <p>まだ登録がありません。</p>}
           <ul className="status-list">
             {needs.map((n) => (
               <li key={n.id} className="card">
-                <p>{n.date} {n.startTime}〜{n.endTime} / {n.supportCategory} / {n.status}</p>
-                <p>{n.publicArea}</p>
+                <h3>{formatDateJa(n.date)} {n.startTime}〜{n.endTime} <StatusBadge map={NEED_STATUS} status={n.status} /></h3>
+                <p><span className="badge">{n.supportCategory}</span> {n.publicArea}</p>
                 {n.private && <p>{n.private.personName} / {n.private.personEmail}</p>}
                 {n.private && <p>詳細住所: {n.private.privateAddress}</p>}
-                <p>応募数: {(offersByNeed.get(n.id) || []).length}</p>
-                <button className="btn btn--primary" onClick={() => setSelectedNeedId(n.id)}>
+                <p>応募: {(offersByNeed.get(n.id) || []).length}件</p>
+                <button className="btn btn--primary" onClick={() => { setMatched(false); setSelectedNeedId(n.id); }}>
                   応募を確認する
                 </button>
               </li>
@@ -108,7 +133,8 @@ function AdminHome() {
           <ul className="status-list">
             {offersForSelected.map((o) => (
               <li key={o.id} className="card">
-                <p>{o.supporterName} / {o.supporterEmail} / {o.status}</p>
+                <h3>{o.supporterName} <StatusBadge map={OFFER_STATUS} status={o.status} /></h3>
+                <p>{o.supporterEmail}</p>
                 {o.message && <p>メッセージ: {o.message}</p>}
                 <button className="btn btn--primary" disabled={o.status !== 'submitted'} onClick={() => setSelectedOfferId(o.id)}>
                   この応募でマッチングする
@@ -121,31 +147,38 @@ function AdminHome() {
 
       {selectedNeed && selectedOffer && (
         <div className="card">
-          <button className="btn btn--secondary" onClick={() => setSelectedOfferId(null)}>応募一覧に戻る</button>
-          <h2>詳細確認</h2>
-          <p>日時: {selectedNeed.date} {selectedNeed.startTime}〜{selectedNeed.endTime}</p>
-          <p>利用者: {selectedNeed.private?.personName} / {selectedNeed.private?.personEmail}</p>
-          <p>詳細住所: {selectedNeed.private?.privateAddress}</p>
-          <p>サポーター: {selectedOffer.supporterName} / {selectedOffer.supporterEmail}</p>
-          <label>
-            サポーターへ伝える補足(任意)
-            <textarea className="input" value={supplementNote} onChange={(e) => setSupplementNote(e.target.value)} />
-          </label>
-          <button className="btn btn--primary btn--large" disabled={submitting} onClick={handleMatch}>
-            {submitting ? '処理中...' : 'マッチング成立'}
-          </button>
+          <p className="step-indicator">マッチングの確認</p>
+          <h2>内容をご確認ください</h2>
+          <InfoRow name="日時">{formatDateJa(selectedNeed.date)} {selectedNeed.startTime}〜{selectedNeed.endTime}</InfoRow>
+          <InfoRow name="利用者">{selectedNeed.private?.personName} / {selectedNeed.private?.personEmail}</InfoRow>
+          <InfoRow name="詳細住所">{selectedNeed.private?.privateAddress}</InfoRow>
+          <InfoRow name="サポーター">{selectedOffer.supporterName} / {selectedOffer.supporterEmail}</InfoRow>
+          <div className="field-card">
+            <label>
+              サポーターへ伝える補足(任意)
+              <textarea className="input" value={supplementNote} onChange={(e) => setSupplementNote(e.target.value)} />
+            </label>
+          </div>
+          <div className="step-nav">
+            <button className="btn btn--secondary" onClick={() => setSelectedOfferId(null)}>応募一覧に戻る</button>
+            <button className="btn btn--primary" disabled={submitting} onClick={handleMatch}>
+              {submitting ? '処理中...' : 'マッチング成立'}
+            </button>
+          </div>
         </div>
       )}
 
       <EmergencyContactFooter />
-    </div>
+    </>
   );
 }
 
 export default function AdminPage() {
   return (
-    <LoginGate redirectPath="/admin">
-      <AdminHome />
-    </LoginGate>
+    <div className="page">
+      <LoginGate redirectPath="/admin">
+        <AdminHome />
+      </LoginGate>
+    </div>
   );
 }

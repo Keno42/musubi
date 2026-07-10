@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>結び — ご紹介</title>
+<style>
+  :root {
+    --text: #3d3a35;
+    --text-h: #2a2621;
+    --bg: #fdfbf7;
+    --card: #ffffff;
+    --border: #e8e2d5;
+    --accent: #d97a4d;
+    --accent-dark: #b8603a;
+    --accent-bg: #fdeee4;
+    --notice-bg: #fff4e0;
+    --notice-border: #f0c987;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 16px/1.8 "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 34px; color: var(--text-h); margin: 0; }
+  .subtitle { font-size: 17px; color: var(--accent-dark); font-weight: 600; margin: 4px 0 24px; }
+  h2 {
+    font-size: 20px; color: var(--text-h);
+    border-left: 5px solid var(--accent);
+    padding-left: 10px; margin: 36px 0 14px;
+  }
+  p { margin: 0 0 10px; }
+  .lead { font-size: 17px; }
+  .roles { display: flex; gap: 12px; flex-wrap: wrap; }
+  .role {
+    flex: 1; min-width: 180px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 16px;
+  }
+  .role b { display: block; color: var(--accent-dark); font-size: 17px; margin-bottom: 4px; }
+  ol.flow { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+  ol.flow li {
+    counter-increment: step;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 12px 16px 12px 54px;
+    margin-bottom: 10px; position: relative;
+  }
+  ol.flow li::before {
+    content: counter(step);
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    font-weight: 700; text-align: center; line-height: 28px;
+  }
+  ul.checks { list-style: none; margin: 0; padding: 0; }
+  ul.checks li { padding-left: 28px; position: relative; margin-bottom: 8px; }
+  ul.checks li::before { content: "✓"; position: absolute; left: 4px; color: var(--accent); font-weight: 700; }
+  .notice {
+    background: var(--notice-bg); border: 1px solid var(--notice-border);
+    border-radius: 14px; padding: 14px 18px; margin-top: 10px;
+  }
+  .examples span {
+    display: inline-block; background: var(--accent-bg); color: var(--accent-dark);
+    font-weight: 600; border-radius: 999px; padding: 4px 16px; margin: 0 8px 8px 0;
+  }
+  footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid var(--border); font-size: 14px; }
+  @media print {
+    body { background: #fff; }
+    main { padding: 0; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>結び</h1>
+  <p class="subtitle">地域の「行きたい」と「手伝える」を、安全につなぐ</p>
+
+  <p class="lead">
+    結びは、認知症のある方や外出に不安のある方の「行きたい」「参加したい」という気持ちと、
+    地域のサポーターの「手伝えます」を、管理者の確認を通じて安全につなぐための仕組みです。
+  </p>
+
+  <h2>3つの立場</h2>
+  <div class="roles">
+    <div class="role"><b>利用者</b>外出のおねがいを登録します。ご本人でも、ご家族やカフェ関係者による代理入力でもかまいません。</div>
+    <div class="role"><b>サポーター</b>募集中のおねがいの中から、手伝えるものに応募します。</div>
+    <div class="role"><b>管理者</b>内容を確認し、安心してお任せできる組み合わせを成立させます。</div>
+  </div>
+
+  <h2>ながれ</h2>
+  <ol class="flow">
+    <li>利用者が「いつ・どんな外出か」を登録します</li>
+    <li>サポーターが、手伝えるおねがいに応募します</li>
+    <li>管理者が双方の内容を確認し、マッチングを成立させます</li>
+    <li>成立すると、双方の画面に確定情報が表示されます(本番ではメールでもお知らせします)</li>
+  </ol>
+
+  <h2>安心のための設計</h2>
+  <ul class="checks">
+    <li>マッチングが成立するまで、利用者のお名前・住所・連絡先はサポーターに表示されません</li>
+    <li>必ず管理者(人)が間に入って確認します。自動では成立しません</li>
+    <li>お手伝いできないこと(医療行為・身体介助・服薬や金銭の管理など)を画面上で明示しています</li>
+    <li>すべての画面に緊急問い合わせ先を表示しています</li>
+  </ul>
+
+  <h2>想定している場面</h2>
+  <p class="examples">
+    <span>認知症カフェへの参加</span>
+    <span>買い物などの生活外出</span>
+    <span>通院の付き添い</span>
+    <span>地域イベントへの参加</span>
+  </p>
+
+  <h2>いまの試作版について</h2>
+  <div class="notice">
+    <p>現在は検討用の試作版です。登録内容は保存されますが、実際のメール送信はまだ行いません。</p>
+    <p>試用の際は、実在する個人情報(お名前・詳細な住所など)は入力しないでください。</p>
+  </div>
+
+  <footer>
+    <p>この資料は試作版のご紹介です。くわしいことは、管理者までお気軽におたずねください。</p>
+  </footer>
+</main>
+</body>
+</html>

@@ -4,6 +4,7 @@ import LoginGate from '../../components/LoginGate';
 import NoticeGate from '../../components/NoticeGate';
 import EmergencyContactFooter from '../../components/EmergencyContactFooter';
 import { createNeed, fetchMyNeeds } from '../../lib/firestore';
+import { formatDateJa } from '../../lib/format';
 
 const SUPPORT_CATEGORIES = [
   '地域活動への外出',
@@ -18,6 +19,30 @@ const STATUS_LABEL = {
 };
 
 const TOTAL_STEPS = 4;
+
+// 15分きざみ・外出に現実的な時間帯(6:00〜22:00)。
+// スマートフォンでは数字入力よりも選択式のほうが確実に操作できる。
+const TIME_OPTIONS = (() => {
+  const list = [];
+  for (let h = 6; h < 22; h++) {
+    for (const m of [0, 15, 30, 45]) {
+      list.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+    }
+  }
+  list.push('22:00');
+  return list;
+})();
+
+function TimeSelect({ value, onChange }) {
+  return (
+    <select className="input" value={value} onChange={onChange} required>
+      <option value="">選んでください</option>
+      {TIME_OPTIONS.map((t) => (
+        <option key={t} value={t}>{t}</option>
+      ))}
+    </select>
+  );
+}
 
 function maxDate() {
   const d = new Date();
@@ -88,13 +113,13 @@ function RegisterForm({ uid, onDone, onCancel }) {
           <div className="field-card">
             <label>
               開始時刻
-              <input type="time" value={form.startTime} onChange={set('startTime')} className="input" required />
+              <TimeSelect value={form.startTime} onChange={set('startTime')} />
             </label>
           </div>
           <div className="field-card">
             <label>
               終了時刻
-              <input type="time" value={form.endTime} onChange={set('endTime')} className="input" required />
+              <TimeSelect value={form.endTime} onChange={set('endTime')} />
             </label>
           </div>
         </div>
@@ -206,7 +231,8 @@ function MyNeedsList({ needs }) {
       <ul className="status-list">
         {needs.map((n) => (
           <li key={n.id}>
-            <p>{n.date} {n.startTime}〜{n.endTime} / {n.supportCategory}</p>
+            <h3>{formatDateJa(n.date)} {n.startTime}〜{n.endTime}</h3>
+            <p><span className="badge">{n.supportCategory}</span></p>
             <p className="status-line">{STATUS_LABEL[n.status] || n.status}</p>
           </li>
         ))}
@@ -231,9 +257,7 @@ function UserHome() {
   }, []);
 
   return (
-    <div className="page">
-      <p className="page-header">Musubi — 利用者</p>
-
+    <>
       {view === 'form' && (
         <RegisterForm
           uid={user.uid}
@@ -259,24 +283,27 @@ function UserHome() {
       )}
 
       <EmergencyContactFooter />
-    </div>
+    </>
   );
 }
 
 export default function UserPage() {
   return (
-    <LoginGate redirectPath="/user">
-      <NoticeGate
-        storageKey="musubi.notice.user"
-        lines={[
-          'このサービスは、地域活動や外出に参加するための付き添い・見守りを調整するためのものです。',
-          'サポーターに依頼できることは、外出中の付き添い・見守り・道案内・地域活動への参加補助です。',
-          '医療行為、身体介助、服薬管理、金銭管理、契約行為、緊急時の単独対応をサポーターに依頼することはできません。',
-          '困ったときは、画面下部の緊急問い合わせ先に連絡してください。',
-        ]}
-      >
-        <UserHome />
-      </NoticeGate>
-    </LoginGate>
+    <div className="page">
+      <LoginGate redirectPath="/user">
+        <NoticeGate
+          storageKey="musubi.notice.user"
+          lines={[
+            'このサービスは、地域活動や外出に参加するための付き添い・見守りを調整するためのものです。',
+            'サポーターに依頼できることは、外出中の付き添い・見守り・道案内・地域活動への参加補助です。',
+            '医療行為、身体介助、服薬管理、金銭管理、契約行為、緊急時の単独対応をサポーターに依頼することはできません。',
+            '困ったときは、画面下部の緊急問い合わせ先に連絡してください。',
+            'この画面は検討用の試作版です。データは保存されますが、実在する利用者の個人情報・詳細住所・緊急性のある情報は入力しないでください。',
+          ]}
+        >
+          <UserHome />
+        </NoticeGate>
+      </LoginGate>
+    </div>
   );
 }

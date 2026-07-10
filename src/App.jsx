@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import TopPage from './pages/TopPage';
 import UserPage from './pages/user/UserPage';
@@ -14,6 +14,7 @@ export default function App() {
           <Route path="/user" element={<UserPage />} />
           <Route path="/supporter" element={<SupporterPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

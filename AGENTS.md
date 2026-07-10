@@ -56,8 +56,13 @@ now, record it in a GitHub issue instead of code.
 - Japanese UI. Base font 16px, body text ≥14px, buttons ≥16px and tall,
   generous whitespace, one task per screen, forms revealed step by step.
 - Notice/status wording is **fixed** by the handoff doc §5 — don't paraphrase.
-  One owner-decided exception (2026-07): the UI term for a need is 「おねがい」,
-  never 「ニーズ」. Code and Firestore collections keep their English names.
+  Owner-decided exceptions (2026-07): the UI term for a need is 「おねがい」,
+  never 「ニーズ」; the app name is shown as 「結び」 — no romaji/alphabet in
+  user-facing text; role pages have no app/role header (people arrive via a
+  dedicated link and know where they are). Code and Firestore collections
+  keep their English names.
+- Time-of-day input is a 15-minute-step select (06:00–22:00), not free text —
+  taps over typing on smartphones.
 - Every logged-in screen shows the emergency contact footer.
 - Design for a nervous first-time user on a phone, not a power user.
 
@@ -76,8 +81,9 @@ https://musubi-6fff3.web.app after merging.
 ```
 src/pages/       one file per screen role (Top / User / Supporter / Admin)
 src/components/  shared pieces (currently 3 — keep it countable)
-src/lib/         firestore.js = the only DB access layer
+src/lib/         firestore.js = the only DB access layer; format.js = tiny display helpers
 src/auth/        login context (email-link auth)
+public/about.html  stakeholder one-pager (static, self-contained)
 firestore.rules  the security model — the most load-bearing file in the repo
 test/            rules tests
 ```
