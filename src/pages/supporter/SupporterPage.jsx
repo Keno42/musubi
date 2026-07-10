@@ -166,7 +166,7 @@ function SupporterHome() {
 export default function SupporterPage() {
   return (
     <div className="page">
-      <LoginGate redirectPath="/supporter">
+      <LoginGate redirectPath="/supporter" title="結び サポーターログイン">
         <NoticeGate
           storageKey="musubi.notice.supporter"
           lines={[

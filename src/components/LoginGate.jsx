@@ -31,7 +31,7 @@ function ReenterEmailForm({ onSubmit, error }) {
   );
 }
 
-export default function LoginGate({ redirectPath, children }) {
+export default function LoginGate({ redirectPath, title, children }) {
   const { user, loading, linkStatus, linkError, completeLinkSignIn, sendLoginLink } = useAuth();
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
@@ -68,7 +68,7 @@ export default function LoginGate({ redirectPath, children }) {
   // linkStatus 'error' (期限切れ・使用済みリンク) はこのフォームで送り直す
   return (
     <div className="card login-gate">
-      <h2>ログイン</h2>
+      <h2>{title || 'ログイン'}</h2>
       {linkStatus === 'error' && <p className="error-text">{linkError}</p>}
       <p>メールアドレスを入力すると、ログイン用リンクが送信されます。</p>
       <form

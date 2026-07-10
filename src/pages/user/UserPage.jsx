@@ -290,7 +290,7 @@ function UserHome() {
 export default function UserPage() {
   return (
     <div className="page">
-      <LoginGate redirectPath="/user">
+      <LoginGate redirectPath="/user" title="結び 利用者ログイン">
         <NoticeGate
           storageKey="musubi.notice.user"
           lines={[

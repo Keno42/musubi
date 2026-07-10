@@ -176,7 +176,7 @@ function AdminHome() {
 export default function AdminPage() {
   return (
     <div className="page">
-      <LoginGate redirectPath="/admin">
+      <LoginGate redirectPath="/admin" title="結び 管理者ログイン">
         <AdminHome />
       </LoginGate>
     </div>
