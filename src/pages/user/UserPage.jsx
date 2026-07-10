@@ -50,14 +50,16 @@ function toDateString(d) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-function todayDate() {
-  return toDateString(new Date());
-}
-
-function maxDate() {
+// 今日から14日先までの選択肢。ネイティブの日付入力は iOS で端末言語の英語表記・
+// 独自サイズ・範囲外選択が起きるため、時刻と同じ選択式にする。
+function dateOptions() {
+  const list = [];
   const d = new Date();
-  d.setDate(d.getDate() + 14);
-  return toDateString(d);
+  for (let i = 0; i <= 14; i++) {
+    list.push(toDateString(d));
+    d.setDate(d.getDate() + 1);
+  }
+  return list;
 }
 
 function emptyForm() {
@@ -107,16 +109,18 @@ function RegisterForm({ uid, onDone, onCancel }) {
   }
 
   if (step === 1) {
-    // iOS の日付ピッカーは min/max を強制しないため、ここでも範囲を確認する
-    const dateOutOfRange = form.date && (form.date < todayDate() || form.date > maxDate());
     return (
       <StepCard step={1} title="付き添い希望の日時">
         <div className="field-card">
           <label>
             希望日(今日から14日先まで)
-            <input type="date" min={todayDate()} max={maxDate()} value={form.date} onChange={set('date')} className="input" required />
+            <select className="input" value={form.date} onChange={set('date')} required>
+              <option value="">選んでください</option>
+              {dateOptions().map((d) => (
+                <option key={d} value={d}>{formatDateJa(d)}</option>
+              ))}
+            </select>
           </label>
-          {dateOutOfRange && <p className="error-text">今日から14日先までの日付を選んでください。</p>}
         </div>
         <div className="time-row">
           <div className="field-card">
@@ -134,7 +138,7 @@ function RegisterForm({ uid, onDone, onCancel }) {
         </div>
         <div className="step-nav">
           <button className="btn btn--secondary" onClick={onCancel}>やめる</button>
-          <button className="btn btn--primary" disabled={!form.date || dateOutOfRange || !form.startTime || !form.endTime} onClick={() => setStep(2)}>次へ</button>
+          <button className="btn btn--primary" disabled={!form.date || !form.startTime || !form.endTime} onClick={() => setStep(2)}>次へ</button>
         </div>
       </StepCard>
     );
