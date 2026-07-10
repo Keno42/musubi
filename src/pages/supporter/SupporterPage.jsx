@@ -12,7 +12,7 @@ import {
   fetchMatchDetails,
 } from '../../lib/firestore';
 
-function NeedCard({ need, onApply }) {
+function NeedCard({ need, applied, onApply }) {
   const [applying, setApplying] = useState(false);
   const [form, setForm] = useState({ supporterName: '', supporterEmail: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
@@ -36,7 +36,11 @@ function NeedCard({ need, onApply }) {
       <p><span className="badge">{need.supportCategory}</span></p>
       {need.publicSummary && <p>{need.publicSummary}</p>}
 
-      {!applying ? (
+      {applied ? (
+        <button className="btn btn--primary btn--large" disabled>
+          応募済み
+        </button>
+      ) : !applying ? (
         <button className="btn btn--primary btn--large" onClick={() => setApplying(true)}>
           このおねがいを手伝う
         </button>
@@ -139,12 +143,14 @@ function SupporterHome() {
     setMyOffers(await fetchMyOffers(user.uid));
   }
 
+  const appliedNeedIds = new Set(myOffers.map((o) => o.needId));
+
   return (
     <>
       <h2>募集中のおねがい</h2>
       {needs.length === 0 && <p>現在募集中のおねがいはありません。</p>}
       {needs.map((n) => (
-        <NeedCard key={n.id} need={n} onApply={handleApply} />
+        <NeedCard key={n.id} need={n} applied={appliedNeedIds.has(n.id)} onApply={handleApply} />
       ))}
 
       {myOffers.length > 0 && (
