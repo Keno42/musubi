@@ -5,6 +5,7 @@ import { firebaseConfig } from './firebaseConfig';
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+auth.languageCode = 'ja'; // ログインリンクのメールを日本語テンプレートで送る
 export const db = getFirestore(app);
 
 if (import.meta.env.VITE_USE_EMULATORS === 'true') {
