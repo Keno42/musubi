@@ -47,7 +47,7 @@ export default function LoginGate({ redirectPath, children }) {
     );
   }
 
-  if (linkStatus === 'need-email' || linkStatus === 'error') {
+  if (linkStatus === 'need-email') {
     return <ReenterEmailForm onSubmit={completeLinkSignIn} error={linkError} />;
   }
 
@@ -65,9 +65,11 @@ export default function LoginGate({ redirectPath, children }) {
     );
   }
 
+  // linkStatus 'error' (期限切れ・使用済みリンク) はこのフォームで送り直す
   return (
     <div className="card login-gate">
       <h2>ログイン</h2>
+      {linkStatus === 'error' && <p className="error-text">{linkError}</p>}
       <p>メールアドレスを入力すると、ログイン用リンクが送信されます。</p>
       <form
         onSubmit={async (e) => {

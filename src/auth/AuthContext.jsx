@@ -42,8 +42,16 @@ export function AuthProvider({ children }) {
         setLinkStatus('none');
       })
       .catch((err) => {
-        setLinkError(err.message);
-        setLinkStatus('error');
+        if (err.code === 'auth/invalid-email') {
+          // 入力されたアドレスがリンクの宛先と違う: 同じリンクで再入力できる
+          setLinkError('メールアドレスが一致しません。ログインリンクを受け取ったメールアドレスを入力してください。');
+          setLinkStatus('need-email');
+        } else {
+          // リンクが期限切れ・使用済みなど: 新しいリンクを送り直してもらう
+          stripLinkParams();
+          setLinkError('ログインリンクの有効期限が切れているか、すでに使用されています。お手数ですが、もう一度ログイン用リンクを送信してください。');
+          setLinkStatus('error');
+        }
       });
   }
 
