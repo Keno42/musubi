@@ -100,17 +100,30 @@ p {
 
 .time-row {
   display: flex;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 0 12px;
 }
 
+/* 「選んでください」が入りきる幅を確保し、狭い画面では縦に並べる */
 .time-row .field-card {
-  flex: 1;
+  flex: 1 1 220px;
+  min-width: 0;
 }
 
 .step-nav {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   margin-top: 8px;
+}
+
+.step-nav--stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.step-nav--stack .btn {
+  margin-right: 0;
 }
 
 .badge {
@@ -155,6 +168,8 @@ label {
 
 .input, input, textarea, select {
   width: 100%;
+  min-width: 0; /* iOS Safari で select や date input が内容幅まで広がるのを防ぐ */
+  max-width: 100%;
   font-size: 16px;
   font-family: inherit;
   padding: 12px 14px;

@@ -110,7 +110,7 @@ function RegisterForm({ uid, onDone, onCancel }) {
     // iOS の日付ピッカーは min/max を強制しないため、ここでも範囲を確認する
     const dateOutOfRange = form.date && (form.date < todayDate() || form.date > maxDate());
     return (
-      <StepCard step={1} title="希望の日時">
+      <StepCard step={1} title="付き添い希望の日時">
         <div className="field-card">
           <label>
             希望日(今日から14日先まで)
@@ -224,9 +224,9 @@ function DoneCard({ onRegisterAnother, onBackToList }) {
       <h2>おねがいを登録しました</h2>
       <p>サポーターからの応募と、管理者の確認をお待ちください。</p>
       <p>マッチングが成立すると、この画面で確認できます。</p>
-      <div className="step-nav">
-        <button className="btn btn--secondary" onClick={onBackToList}>登録状況を見る</button>
+      <div className="step-nav step-nav--stack">
         <button className="btn btn--primary" onClick={onRegisterAnother}>続けて登録する</button>
+        <button className="btn btn--secondary" onClick={onBackToList}>登録状況を見る</button>
       </div>
     </div>
   );
