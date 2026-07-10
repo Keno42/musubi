@@ -44,14 +44,20 @@ function TimeSelect({ value, onChange }) {
   );
 }
 
-function maxDate() {
-  const d = new Date();
-  d.setDate(d.getDate() + 14);
-  return d.toISOString().slice(0, 10);
+// toISOString は UTC 基準で日本時間の朝 9 時前に前日を返すため、ローカル日付で組み立てる
+function toDateString(d) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 function todayDate() {
-  return new Date().toISOString().slice(0, 10);
+  return toDateString(new Date());
+}
+
+function maxDate() {
+  const d = new Date();
+  d.setDate(d.getDate() + 14);
+  return toDateString(d);
 }
 
 function emptyForm() {
@@ -101,6 +107,8 @@ function RegisterForm({ uid, onDone, onCancel }) {
   }
 
   if (step === 1) {
+    // iOS の日付ピッカーは min/max を強制しないため、ここでも範囲を確認する
+    const dateOutOfRange = form.date && (form.date < todayDate() || form.date > maxDate());
     return (
       <StepCard step={1} title="希望の日時">
         <div className="field-card">
@@ -108,6 +116,7 @@ function RegisterForm({ uid, onDone, onCancel }) {
             希望日(今日から14日先まで)
             <input type="date" min={todayDate()} max={maxDate()} value={form.date} onChange={set('date')} className="input" required />
           </label>
+          {dateOutOfRange && <p className="error-text">今日から14日先までの日付を選んでください。</p>}
         </div>
         <div className="time-row">
           <div className="field-card">
@@ -125,7 +134,7 @@ function RegisterForm({ uid, onDone, onCancel }) {
         </div>
         <div className="step-nav">
           <button className="btn btn--secondary" onClick={onCancel}>やめる</button>
-          <button className="btn btn--primary" disabled={!form.date || !form.startTime || !form.endTime} onClick={() => setStep(2)}>次へ</button>
+          <button className="btn btn--primary" disabled={!form.date || dateOutOfRange || !form.startTime || !form.endTime} onClick={() => setStep(2)}>次へ</button>
         </div>
       </StepCard>
     );
