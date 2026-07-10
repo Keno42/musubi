@@ -18,8 +18,5 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MUSUBI_6FFF3 }}
           channelId: live
           projectId: musubi-6fff3
-      # Note: the auto-created service account above only has Firebase Hosting Admin
-      # permission, so it can't also deploy Firestore rules. Run
-      # `firebase deploy --only firestore:rules` manually after rules changes,
-      # or grant the service account roles/firebaserules.admin in Cloud Console
-      # to automate this too.
+      # Firestore rules are deployed manually, not from CI.
+      # After changing firestore.rules: firebase deploy --only firestore:rules
