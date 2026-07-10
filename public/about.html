@@ -55,9 +55,10 @@
     background: var(--accent); color: #fff;
     font-weight: 700; text-align: center; line-height: 28px;
   }
-  ul.checks { list-style: none; margin: 0; padding: 0; }
-  ul.checks li { padding-left: 28px; position: relative; margin-bottom: 8px; }
+  ul.checks, ul.plans { list-style: none; margin: 0; padding: 0; }
+  ul.checks li, ul.plans li { padding-left: 28px; position: relative; margin-bottom: 8px; }
   ul.checks li::before { content: "✓"; position: absolute; left: 4px; color: var(--accent); font-weight: 700; }
+  ul.plans li::before { content: "・"; position: absolute; left: 4px; color: var(--accent); font-weight: 700; }
   .notice {
     background: var(--notice-bg); border: 1px solid var(--notice-border);
     border-radius: 14px; padding: 14px 18px; margin-top: 10px;
@@ -119,6 +120,16 @@
     <p>現在は検討用の試作版です。登録内容は保存されますが、実際のメール送信はまだ行いません。</p>
     <p>試用の際は、実在する個人情報(お名前・詳細な住所など)は入力しないでください。</p>
   </div>
+
+  <h2>今後の想定(相談の上で進行できます)</h2>
+  <ul class="plans">
+    <li>マッチング成立時の、実際のメールによるお知らせ</li>
+    <li>サポーターが「活動できる日」を登録できる仕組み</li>
+    <li>電話番号での連絡への対応</li>
+    <li>キャンセルや当日連絡の仕組み</li>
+    <li>サポーター登録・確認の流れづくり</li>
+    <li>ほかの地域・団体での利用</li>
+  </ul>
 
   <footer>
     <p>この資料は試作版のご紹介です。くわしいことは、管理者までお気軽におたずねください。</p>
