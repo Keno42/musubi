@@ -115,6 +115,28 @@ test('offer creator can read their own offer; other users cannot', async () => {
   await assertFails(stranger.firestore().collection('offers').doc('offer1').get());
 });
 
+// fetchMyOffers が使う「自分の応募一覧」クエリ。リスト読み取りはドキュメント単位の
+// 読み取りと別に判定されるため、明示的にテストする。
+test('supporter can list their own offers via createdByUid query; unconstrained list fails', async () => {
+  await seedAsAdmin((db) =>
+    db.collection('offers').doc('offer1').set({
+      id: 'offer1',
+      needId: 'need1',
+      status: 'submitted',
+      supporterName: 'サポーターA',
+      supporterEmail: 'supporter@example.com',
+      message: '',
+      createdByUid: 'supporter1',
+    })
+  );
+
+  const owner = testEnv.authenticatedContext('supporter1', { email: 'supporter1@example.com' });
+  await assertSucceeds(
+    owner.firestore().collection('offers').where('createdByUid', '==', 'supporter1').get()
+  );
+  await assertFails(owner.firestore().collection('offers').get());
+});
+
 test('only admin can change offer status', async () => {
   await seedAsAdmin((db) =>
     db.collection('offers').doc('offer1').set({
