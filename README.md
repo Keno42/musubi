@@ -7,6 +7,13 @@
 
 Vite + React + Firebase(Hosting / Auth メールリンク認証 / Firestore)
 
+## Contributing — 人間もAIも必読
+
+コードを書く前に [`AGENTS.md`](./AGENTS.md) を読むこと。
+このプロジェクトの最優先事項は「機能を増やすこと」ではなく
+「利用者・開発者・AIにとって常にシンプルであり続けること」。
+依頼をそのまま実装せず、アプリ全体の優先順位と照らして判断する。
+
 ## Local setup
 
 ```sh
