@@ -7,7 +7,10 @@ import {
   assertFails,
 } from '@firebase/rules-unit-testing';
 
-const ADMIN_EMAIL = 'keno42@gmail.com';
+// 管理者は firestore.rules に直書きされたメールアドレスで判定する
+// (リポジトリ上はプレースホルダ。実際の運営アドレスは本番環境側でのみ管理)
+const ADMIN_EMAIL = 'admin@example.com';
+const ADMIN_CLAIMS = { email: ADMIN_EMAIL };
 
 let testEnv;
 
@@ -91,8 +94,20 @@ test('non-admin cannot read needsPrivate; admin can', async () => {
   const nonAdmin = testEnv.authenticatedContext('user2', { email: 'user2@example.com' });
   await assertFails(nonAdmin.firestore().collection('needsPrivate').doc('need1').get());
 
-  const admin = testEnv.authenticatedContext('admin1', { email: ADMIN_EMAIL });
+  const admin = testEnv.authenticatedContext('admin1', ADMIN_CLAIMS);
   await assertSucceeds(admin.firestore().collection('needsPrivate').doc('need1').get());
+});
+
+// 管理者判定はホワイトリストのメールアドレスのみ。リスト外のメールや
+// カスタムクレームでは管理者になれないことを固定するリグレッションテスト。
+test('only the whitelisted email grants admin; other emails and custom claims do not', async () => {
+  await seedAsAdmin((db) => db.collection('needsPrivate').doc('need1').set(needPrivateDoc()));
+
+  const otherEmail = testEnv.authenticatedContext('user3', { email: 'operator@example.com' });
+  await assertFails(otherEmail.firestore().collection('needsPrivate').doc('need1').get());
+
+  const claimWithoutEmail = testEnv.authenticatedContext('user4', { admin: true });
+  await assertFails(claimWithoutEmail.firestore().collection('needsPrivate').doc('need1').get());
 });
 
 test('offer creator can read their own offer; other users cannot', async () => {
@@ -155,7 +170,7 @@ test('only admin can change offer status', async () => {
     owner.firestore().collection('offers').doc('offer1').update({ status: 'approved' })
   );
 
-  const admin = testEnv.authenticatedContext('admin1', { email: ADMIN_EMAIL });
+  const admin = testEnv.authenticatedContext('admin1', ADMIN_CLAIMS);
   await assertSucceeds(
     admin.firestore().collection('offers').doc('offer1').update({ status: 'approved' })
   );
@@ -172,7 +187,7 @@ test('only admin can write matchings', async () => {
     })
   );
 
-  const admin = testEnv.authenticatedContext('admin1', { email: ADMIN_EMAIL });
+  const admin = testEnv.authenticatedContext('admin1', ADMIN_CLAIMS);
   await assertSucceeds(
     admin.firestore().collection('matchings').doc('m1').set({
       id: 'm1',

@@ -7,11 +7,16 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // v2.5: admin判定は簡易でよい方式(handoff sec.7)を採用。
-    // 運営メールアドレスをここに列挙する。
+    // admin判定は運営メールアドレスの直書きリスト(handoff sec.7の簡易方式)。
+    // カスタムクレーム方式も検討したが、クレーム付与に手作業が必要なため見送り。
+    // リポジトリ上はプレースホルダを置き、実際の運営アドレスは本番環境側でのみ
+    // 管理する(2026-07-11)。example.com はメールを受信できないため、
+    // ★このファイルをそのまま本番にデプロイすると管理者が誰もいなくなる。
+    // rules をデプロイする前に、必ず実際の運営アドレスに置き換えること。
+    // token.get: メールを持たないトークンでもエラーにせず静かに拒否する。
     function isAdmin() {
-      return isSignedIn() && request.auth.token.email in [
-        'keno42@gmail.com'
+      return isSignedIn() && request.auth.token.get('email', '') in [
+        'admin@example.com'
       ];
     }
 
