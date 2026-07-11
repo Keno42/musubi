@@ -28,8 +28,12 @@ now, record it in a GitHub issue instead of code.
 ## Invariants — never break these
 
 - `needsPublic` documents must **never** contain PII: no names, emails,
-  addresses, destinations, or detailed circumstances. Any new Firestore field
-  must be explicitly classified public or private before it is written.
+  exact addresses, facility names, exact destinations, or detailed
+  circumstances. The only exception is locality-level (丁目程度) rough
+  start/destination info the user types themselves on the おねがいカード
+  (owner decision 2026-07-11). Never copy or derive public fields from
+  private ones. Any new Firestore field must be explicitly classified
+  public or private before it is written.
 - All Firestore reads/writes go through `src/lib/firestore.js`. No inline
   queries in components.
 - Any change to `firestore.rules` requires a matching test in `test/` and a
@@ -80,8 +84,8 @@ https://musubi-6fff3.web.app after merging.
 
 ```
 src/pages/       one file per screen role (Top / User / Supporter / Admin)
-src/components/  shared pieces (currently 3 — keep it countable)
-src/lib/         firestore.js = the only DB access layer; format.js = tiny display helpers
+src/components/  shared pieces (currently 4 — keep it countable)
+src/lib/         firestore.js = the only DB access layer; format.js, supportPoints.js = display helpers + card option vocabulary
 src/auth/        login context (email-link auth)
 public/about.html  stakeholder one-pager (static, self-contained)
 firestore.rules  the security model — the most load-bearing file in the repo

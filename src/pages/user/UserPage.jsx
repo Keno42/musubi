@@ -3,14 +3,19 @@ import { useAuth } from '../../auth/AuthContext';
 import LoginGate from '../../components/LoginGate';
 import NoticeGate from '../../components/NoticeGate';
 import EmergencyContactFooter from '../../components/EmergencyContactFooter';
+import NeedPublicCard from '../../components/NeedPublicCard';
 import { createNeed, fetchMyNeeds } from '../../lib/firestore';
 import { formatDateJa } from '../../lib/format';
+import { SUPPORT_CATEGORIES, pointsForCategory } from '../../lib/supportPoints';
 
-const SUPPORT_CATEGORIES = [
-  '地域活動への外出',
-  '買い物などの生活外出',
-  '通院などの外出',
-  'その他',
+// おおよその移動距離はサポーターの応募判断に必要(関係者フィードバック 2026-07-11)。
+// 目的地を特定しない粒度に限る。実際の行き先は needsPrivate 側のみ。
+// 「徒歩で」と書かない: 自走の車いすなど、歩かない移動の人を締め出さない表現にする。
+const DISTANCE_OPTIONS = [
+  '移動はほとんどありません',
+  '近くまで(10分ほどの移動)',
+  '少し遠くまで(30分ほどの移動)',
+  'バス・電車・車などを使います',
 ];
 
 const STATUS_LABEL = {
@@ -18,7 +23,7 @@ const STATUS_LABEL = {
   matched: 'マッチングが成立しました。本番では、登録されたメールアドレス宛に詳細が送信されます。この試作では、画面上で成立状態のみ表示しています。',
 };
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 5;
 
 // 15分きざみ・外出に現実的な時間帯(6:00〜22:00)。
 // スマートフォンでは数字入力よりも選択式のほうが確実に操作できる。
@@ -68,19 +73,23 @@ function emptyForm() {
     startTime: '',
     endTime: '',
     supportCategory: SUPPORT_CATEGORIES[0],
+    publicDistance: '',
+    supportPoints: [],
     publicSummary: '',
     publicArea: '',
     privateAddress: '',
+    privateDestination: '',
     personName: '',
     personEmail: '',
   };
 }
 
-function StepCard({ step, title, children }) {
+function StepCard({ step, title, audience, children }) {
   return (
     <div className="card">
       <p className="step-indicator">おねがいの登録 — ステップ {step} / {TOTAL_STEPS}</p>
       <h2>{title}</h2>
+      {audience && <p className="step-audience">{audience}</p>}
       {children}
     </div>
   );
@@ -96,11 +105,25 @@ function RegisterForm({ uid, onDone, onCancel }) {
     return (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
   }
 
+  function togglePoint(id) {
+    setForm((f) => ({
+      ...f,
+      supportPoints: f.supportPoints.includes(id)
+        ? f.supportPoints.filter((p) => p !== id)
+        : [...f.supportPoints, id],
+    }));
+  }
+
   async function submit() {
     setSubmitting(true);
     setError(null);
     try {
-      await createNeed(uid, form);
+      // カテゴリを変えた場合に、非表示になったシーン専用項目が残らないようにする
+      const visible = pointsForCategory(form.supportCategory).map((p) => p.id);
+      await createNeed(uid, {
+        ...form,
+        supportPoints: form.supportPoints.filter((id) => visible.includes(id)),
+      });
       onDone();
     } catch (err) {
       setError(err.message);
@@ -110,7 +133,8 @@ function RegisterForm({ uid, onDone, onCancel }) {
 
   if (step === 1) {
     return (
-      <StepCard step={1} title="付き添い希望の日時">
+      <StepCard step={1} title="付き添い希望の日時" audience="サポーターのみなさんに公開されます">
+        <p>サポーターのみなさんに見せる「おねがいカード」を作ります。お名前や正確な場所は、カードには載りません。</p>
         <div className="field-card">
           <label>
             希望日(今日から14日先まで)
@@ -146,7 +170,7 @@ function RegisterForm({ uid, onDone, onCancel }) {
 
   if (step === 2) {
     return (
-      <StepCard step={2} title="どんな外出ですか?">
+      <StepCard step={2} title="どんな外出ですか?" audience="サポーターのみなさんに公開されます">
         <div className="field-card">
           {SUPPORT_CATEGORIES.map((c) => (
             <label key={c} className="radio-line">
@@ -156,65 +180,124 @@ function RegisterForm({ uid, onDone, onCancel }) {
           ))}
         </div>
         <div className="field-card">
-          <label>
-            付き添いに関する補足(管理者確認用)
-            <textarea value={form.publicSummary} onChange={set('publicSummary')} className="input" />
-          </label>
+          <p className="field-name">どのくらい移動しますか?</p>
+          {DISTANCE_OPTIONS.map((d) => (
+            <label key={d} className="radio-line">
+              <input type="radio" name="publicDistance" value={d} checked={form.publicDistance === d} onChange={set('publicDistance')} />
+              {d}
+            </label>
+          ))}
         </div>
         <div className="step-nav">
           <button className="btn btn--secondary" onClick={() => setStep(1)}>戻る</button>
-          <button className="btn btn--primary" onClick={() => setStep(3)}>次へ</button>
+          <button className="btn btn--primary" disabled={!form.publicDistance} onClick={() => setStep(3)}>次へ</button>
         </div>
       </StepCard>
     );
   }
 
+  // ステップ3まででサポーターに公開される「おねがいカード」の内容が揃う。
+  // カードの姿はステップ5のプレビューで確認できる。
   if (step === 3) {
     return (
-      <StepCard step={3} title="大まかなエリア">
+      <StepCard step={3} title="おねがいカードの仕上げ" audience="サポーターのみなさんに公開されます">
         <div className="field-card">
           <label>
-            例: 西大井3丁目付近(サポーターに表示されます)
+            大まかな出発地と目的地(例: 西大井3丁目 / 西大井3丁目から2丁目 など)
             <input type="text" value={form.publicArea} onChange={set('publicArea')} className="input" required />
           </label>
         </div>
+        <div className="field-card">
+          <p className="field-name">手伝って欲しいこと(あてはまるものすべて)</p>
+          {pointsForCategory(form.supportCategory).map((p) => (
+            <label key={p.id} className="radio-line">
+              <input
+                type="checkbox"
+                checked={form.supportPoints.includes(p.id)}
+                onChange={() => togglePoint(p.id)}
+              />
+              {p.situation} → {p.request}
+            </label>
+          ))}
+        </div>
+        <div className="field-card">
+          <label>
+            本人から一言(任意。例: コーラスをやっていました。音楽の話ができたら嬉しいです)
+            <textarea value={form.publicSummary} onChange={set('publicSummary')} className="input" />
+          </label>
+        </div>
+        <p>お名前や正確な場所は、このあと別にお伺いします。カードには書かないでください。</p>
         <div className="step-nav">
           <button className="btn btn--secondary" onClick={() => setStep(2)}>戻る</button>
-          <button className="btn btn--primary" disabled={!form.publicArea} onClick={() => setStep(4)}>次へ</button>
+          <button
+            className="btn btn--primary"
+            disabled={!form.publicArea}
+            onClick={() => setStep(4)}
+          >
+            次へ
+          </button>
+        </div>
+      </StepCard>
+    );
+  }
+
+  if (step === 4) {
+    return (
+      <StepCard step={4} title="当日のための詳細" audience="管理者と、当日の担当サポーターにだけお知らせします">
+        <div className="field-card">
+          <label>
+            当人の名前
+            <input type="text" value={form.personName} onChange={set('personName')} className="input" required />
+          </label>
+        </div>
+        <div className="field-card">
+          <label>
+            待ち合わせ場所(例: 自宅の住所や、目印になる場所)
+            <input type="text" value={form.privateAddress} onChange={set('privateAddress')} className="input" required />
+          </label>
+        </div>
+        <div className="field-card">
+          <label>
+            行き先(例: ○○医院)
+            <input type="text" value={form.privateDestination} onChange={set('privateDestination')} className="input" required />
+          </label>
+        </div>
+        <div className="field-card">
+          <label>
+            連絡先メールアドレス
+            <input type="email" value={form.personEmail} onChange={set('personEmail')} className="input" required />
+          </label>
+        </div>
+        <div className="step-nav">
+          <button className="btn btn--secondary" onClick={() => setStep(3)}>戻る</button>
+          <button
+            className="btn btn--primary"
+            disabled={!form.personName || !form.privateAddress || !form.privateDestination || !form.personEmail}
+            onClick={() => setStep(5)}
+          >
+            内容を確認
+          </button>
         </div>
       </StepCard>
     );
   }
 
   return (
-    <StepCard step={4} title="詳細情報(管理者のみ閲覧)">
+    <StepCard step={5} title="内容の確認">
+      <p>この「おねがいカード」が、サポーターのみなさんに公開されます。</p>
+      <NeedPublicCard need={form} />
       <div className="field-card">
-        <label>
-          詳細住所
-          <input type="text" value={form.privateAddress} onChange={set('privateAddress')} className="input" required />
-        </label>
-      </div>
-      <div className="field-card">
-        <label>
-          当人の名前
-          <input type="text" value={form.personName} onChange={set('personName')} className="input" required />
-        </label>
-      </div>
-      <div className="field-card">
-        <label>
-          連絡先メールアドレス
-          <input type="email" value={form.personEmail} onChange={set('personEmail')} className="input" required />
-        </label>
+        <p className="field-name">管理者と、当日の担当サポーターにだけお知らせします</p>
+        <p>当人の名前: {form.personName}</p>
+        <p>待ち合わせ場所: {form.privateAddress}</p>
+        <p>行き先: {form.privateDestination}</p>
+        <p>連絡先: {form.personEmail}</p>
       </div>
       {error && <p className="error-text">{error}</p>}
       <div className="step-nav">
-        <button className="btn btn--secondary" onClick={() => setStep(3)}>戻る</button>
-        <button
-          className="btn btn--primary"
-          disabled={submitting || !form.privateAddress || !form.personName || !form.personEmail}
-          onClick={submit}
-        >
-          {submitting ? '登録中...' : '登録する'}
+        <button className="btn btn--secondary" onClick={() => setStep(4)}>戻る</button>
+        <button className="btn btn--primary" disabled={submitting} onClick={submit}>
+          {submitting ? '登録中...' : 'この内容で登録する'}
         </button>
       </div>
     </StepCard>
@@ -241,11 +324,11 @@ function MyNeedsList({ needs }) {
   return (
     <div className="card">
       <h2>登録したおねがい</h2>
+      <p>「おねがいカード」は、この内容でサポーターのみなさんに公開されています。</p>
       <ul className="status-list">
         {needs.map((n) => (
           <li key={n.id}>
-            <h3>{formatDateJa(n.date)} {n.startTime}〜{n.endTime}</h3>
-            <p><span className="badge">{n.supportCategory}</span></p>
+            <NeedPublicCard need={n} />
             <p className="status-line">{STATUS_LABEL[n.status] || n.status}</p>
           </li>
         ))}

@@ -28,7 +28,9 @@ export async function createNeed(uid, form) {
     endTime: form.endTime,
     publicArea: form.publicArea,
     supportCategory: form.supportCategory,
-    publicSummary: form.publicSummary,
+    publicDistance: form.publicDistance || '',
+    supportPoints: form.supportPoints || [],
+    publicSummary: form.publicSummary || '',
     createdByUid: uid,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -38,6 +40,7 @@ export async function createNeed(uid, form) {
     personName: form.personName,
     personEmail: form.personEmail,
     privateAddress: form.privateAddress,
+    privateDestination: form.privateDestination || '',
     privateNote: form.privateNote || '',
     createdByUid: uid,
     createdAt: serverTimestamp(),
@@ -156,9 +159,13 @@ export async function approveMatch(adminUid, need, offer, supplementNote) {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+  // 利用者フォームの約束「管理者と、当日の担当サポーターにだけお知らせします」に
+  // 合わせて、成立時に担当サポーターへ渡す項目をここで確定する(名前・待ち合わせ場所・行き先)。
   batch.set(detailsRef, {
     matchingId,
+    personName: need.private?.personName || '',
     confirmedAddress: need.private?.privateAddress || '',
+    confirmedDestination: need.private?.privateDestination || '',
     supplementNote: supplementNote || '',
     createdAt: serverTimestamp(),
   });

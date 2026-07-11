@@ -3,6 +3,7 @@ import { useAuth } from '../../auth/AuthContext';
 import LoginGate from '../../components/LoginGate';
 import EmergencyContactFooter from '../../components/EmergencyContactFooter';
 import { formatDateJa } from '../../lib/format';
+import { resolveSupportPoints } from '../../lib/supportPoints';
 import { fetchAllNeedsForAdmin, fetchAllOffersForAdmin, approveMatch } from '../../lib/firestore';
 
 const NEED_STATUS = {
@@ -114,7 +115,8 @@ function AdminHome() {
                 <h3>{formatDateJa(n.date)} {n.startTime}〜{n.endTime} <StatusBadge map={NEED_STATUS} status={n.status} /></h3>
                 <p><span className="badge">{n.supportCategory}</span> {n.publicArea}</p>
                 {n.private && <p>{n.private.personName} / {n.private.personEmail}</p>}
-                {n.private && <p>詳細住所: {n.private.privateAddress}</p>}
+                {n.private && <p>待ち合わせ場所: {n.private.privateAddress}</p>}
+                {n.private?.privateDestination && <p>行き先: {n.private.privateDestination}</p>}
                 <p>応募: {(offersByNeed.get(n.id) || []).length}件</p>
                 <button className="btn btn--primary" onClick={() => { setMatched(false); setSelectedNeedId(n.id); }}>
                   応募を確認する
@@ -151,7 +153,14 @@ function AdminHome() {
           <h2>内容をご確認ください</h2>
           <InfoRow name="日時">{formatDateJa(selectedNeed.date)} {selectedNeed.startTime}〜{selectedNeed.endTime}</InfoRow>
           <InfoRow name="利用者">{selectedNeed.private?.personName} / {selectedNeed.private?.personEmail}</InfoRow>
-          <InfoRow name="詳細住所">{selectedNeed.private?.privateAddress}</InfoRow>
+          <InfoRow name="待ち合わせ場所">{selectedNeed.private?.privateAddress}</InfoRow>
+          {selectedNeed.private?.privateDestination && <InfoRow name="行き先">{selectedNeed.private.privateDestination}</InfoRow>}
+          {selectedNeed.publicDistance && <InfoRow name="移動距離">{selectedNeed.publicDistance}</InfoRow>}
+          {selectedNeed.supportPoints?.length > 0 && (
+            <InfoRow name="サポートのポイント">
+              {resolveSupportPoints(selectedNeed.supportPoints).map((p) => p.request).join(' / ')}
+            </InfoRow>
+          )}
           <InfoRow name="サポーター">{selectedOffer.supporterName} / {selectedOffer.supporterEmail}</InfoRow>
           <div className="field-card">
             <label>

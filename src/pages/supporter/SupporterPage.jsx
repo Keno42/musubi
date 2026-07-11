@@ -3,13 +3,16 @@ import { useAuth } from '../../auth/AuthContext';
 import LoginGate from '../../components/LoginGate';
 import NoticeGate from '../../components/NoticeGate';
 import EmergencyContactFooter from '../../components/EmergencyContactFooter';
+import NeedPublicCard from '../../components/NeedPublicCard';
 import { formatDateJa } from '../../lib/format';
+import { selfCheckItems, resolveSupportPoints } from '../../lib/supportPoints';
 import {
   fetchOpenNeeds,
   createOffer,
   fetchMyOffers,
   fetchMatchingByOfferId,
   fetchMatchDetails,
+  fetchNeedPublic,
 } from '../../lib/firestore';
 
 function NeedCard({ need, applied, onApply }) {
@@ -17,6 +20,21 @@ function NeedCard({ need, applied, onApply }) {
   const [form, setForm] = useState({ supporterName: '', supporterEmail: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  // 応募前セルフチェック(サポートのポイントから自動生成・最大3問・安全系優先)。
+  // 全問チェックするまで応募ボタンは押せない。
+  const checks = selfCheckItems(need.supportPoints);
+  const [confirmed, setConfirmed] = useState(() => new Set());
+
+  function toggleConfirm(id) {
+    setConfirmed((s) => {
+      const next = new Set(s);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  const allConfirmed = confirmed.size >= checks.length;
 
   if (done) {
     return (
@@ -30,12 +48,7 @@ function NeedCard({ need, applied, onApply }) {
   }
 
   return (
-    <div className="card">
-      <h3>{formatDateJa(need.date)} {need.startTime}〜{need.endTime}</h3>
-      <p>{need.publicArea}</p>
-      <p><span className="badge">{need.supportCategory}</span></p>
-      {need.publicSummary && <p>{need.publicSummary}</p>}
-
+    <NeedPublicCard need={need}>
       {applied ? (
         <button className="btn btn--primary btn--large" disabled>
           応募済み
@@ -75,38 +88,67 @@ function NeedCard({ need, applied, onApply }) {
                 onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))} />
             </label>
           </div>
+          {checks.length > 0 && (
+            <div className="field-card">
+              <p className="field-name">応募の前に、できることを確認してください</p>
+              {checks.map((c) => (
+                <label key={c.id} className="radio-line">
+                  <input
+                    type="checkbox"
+                    checked={confirmed.has(c.id)}
+                    onChange={() => toggleConfirm(c.id)}
+                  />
+                  {c.selfCheck}
+                </label>
+              ))}
+            </div>
+          )}
           <div className="step-nav">
             <button type="button" className="btn btn--secondary" onClick={() => setApplying(false)}>やめる</button>
-            <button type="submit" className="btn btn--primary" disabled={submitting}>
-              {submitting ? '送信中...' : '応募する'}
+            <button type="submit" className="btn btn--primary" disabled={submitting || !allConfirmed}>
+              {submitting ? '送信中...' : allConfirmed ? '応募する' : 'すべて確認すると応募できます'}
             </button>
           </div>
         </form>
       )}
-    </div>
+    </NeedPublicCard>
   );
 }
 
 function MyOfferStatus({ offer }) {
   const [matching, setMatching] = useState(null);
   const [details, setDetails] = useState(null);
+  const [need, setNeed] = useState(null);
 
   useEffect(() => {
     (async () => {
+      setNeed(await fetchNeedPublic(offer.needId));
       const m = await fetchMatchingByOfferId(offer.id);
       setMatching(m);
       if (m) setDetails(await fetchMatchDetails(m.id));
     })();
-  }, [offer.id]);
+  }, [offer.id, offer.needId]);
+
+  // どの「おねがい」への応募かが分かるよう、成立前後とも日時を必ず見せる
+  const heading = need && (
+    <h3>{formatDateJa(need.date)} {need.startTime}〜{need.endTime}</h3>
+  );
 
   if (matching) {
     return (
       <li className="card">
+        {heading}
         <p><span className="badge">マッチング成立</span></p>
         <p>本番では、登録されたメールアドレス宛に詳細が送信されます。この試作では、画面上で確定情報を確認できます。</p>
         {details && (
           <div className="matched-details">
-            <p>詳細住所: {details.confirmedAddress}</p>
+            {details.personName && <p>当人のお名前: {details.personName}</p>}
+            <p>待ち合わせ場所: {details.confirmedAddress}</p>
+            {details.confirmedDestination && <p>行き先: {details.confirmedDestination}</p>}
+            {need?.publicSummary && <p>本人から一言: 「{need.publicSummary}」</p>}
+            {resolveSupportPoints(need?.supportPoints).map((p) => (
+              <p key={p.id}>・{p.situation} → {p.request}</p>
+            ))}
             {details.supplementNote && <p>補足: {details.supplementNote}</p>}
           </div>
         )}
@@ -116,6 +158,7 @@ function MyOfferStatus({ offer }) {
 
   return (
     <li className="card">
+      {heading}
       <p><span className="badge badge--muted">確認待ち</span></p>
       <p>応募を受け付けました。管理者が内容を確認しています。</p>
     </li>
