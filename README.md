@@ -1,7 +1,8 @@
 # Musubi
 
-地域の「行きたい」「手伝える」を安全につなぐ試作サービス(v2.5)。
-プロジェクトの背景・仕様は [`docs/musubi-v2.5-handoff.md`](./docs/musubi-v2.5-handoff.md) を参照。
+地域の「行きたい」「手伝える」を安全につなぐ試作サービス(v3)。
+ベースの仕様は [`docs/musubi-v2.5-handoff.md`](./docs/musubi-v2.5-handoff.md)、
+v3(おねがいカード)の設計判断は [`docs/feedback/2026-07-11-stakeholder.md`](./docs/feedback/2026-07-11-stakeholder.md) を参照。
 
 ## Stack
 
@@ -48,6 +49,12 @@ Firestore: 8080 / Auth: 9099 / Hosting: 5000 / Emulator UI: 4000
 
 To point the app at emulators during `npm run dev`, set `VITE_USE_EMULATORS=true`.
 
+管理者判定は `firestore.rules` に直書きされたメールアドレスで行います。
+エミュレータで管理者画面を試すには、そのアドレス(リポジトリ上は
+`admin@example.com`)でログインしてください(エミュレータはメールボックスの
+所有確認をしないため、誰でもそのアドレスでログインできます。ログインリンクは
+エミュレータのログに出力されます)。
+
 ## Deploy
 
 Hosting deploys automatically via GitHub Actions on every push to `main` (see
@@ -60,6 +67,10 @@ deploy manually:
 ```sh
 firebase deploy --only firestore:rules
 ```
+
+⚠️ リポジトリの `firestore.rules` の管理者アドレスはプレースホルダです。
+そのままデプロイすると管理者が誰もいなくなります。デプロイ前に実際の
+運営アドレスへ置き換えてください(本番の実アドレスはリポジトリに含めない)。
 
 To deploy everything manually:
 
