@@ -77,3 +77,28 @@ test.describe('Scenario: a user whose おねがい has been matched opens the us
     await expect(page).toHaveScreenshot('golden-2-4.png');
   });
 });
+
+test.describe('Scenario: a user with multiple おねがい opens the user page', () => {
+  test('lists one open and one matched おねがい — matches golden-2-5', async ({ page }) => {
+    // Given this user registered two おねがい: one still open, one already matched
+    const uid = await createTestUser(USER_EMAIL);
+    const supporterUid = await createTestUser(SUPPORTER_EMAIL);
+    await seedOpenNeed(uid);
+    const matchedNeedId = await seedOpenNeed(uid);
+    const offerId = await seedOffer(supporterUid, matchedNeedId);
+    await seedApprovedMatch('bdd-admin-fixture', matchedNeedId, offerId);
+
+    // When they open the user page and sign in
+    await signInAsUser(page);
+
+    // Then the list shows both おねがい, each with its own status
+    await expect(page.getByRole('heading', { name: '登録したおねがい' })).toBeVisible();
+    await expect(
+      page.getByText('おねがいを受け付けました。現在、サポーターからの応募または管理者の確認を待っています。')
+    ).toBeVisible();
+    await expect(
+      page.getByText('マッチングが成立しました。本番では、登録されたメールアドレス宛に詳細が送信されます。この試作では、画面上で成立状態のみ表示しています。')
+    ).toBeVisible();
+    await expect(page).toHaveScreenshot('golden-2-5.png');
+  });
+});

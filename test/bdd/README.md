@@ -21,7 +21,7 @@ app can't actually produce isn't testing anything real.
 
 - `top.spec.js` — the public top page (no login): first visit, phone viewport.
 - `user.spec.js` — `/user`: no おねがい yet (empty form), an open
-  (unmatched) おねがい, a matched おねがい.
+  (unmatched) おねがい, a matched おねがい, a list with one of each.
 - `supporter.spec.js` — `/supporter`: nothing open to browse, browsing an
   open おねがい, mid-application with the self-check unconfirmed, already
   applied and awaiting review, application matched.
