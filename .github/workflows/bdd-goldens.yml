@@ -1,0 +1,72 @@
+# Runs the BDD suite with --update-snapshots and pushes any changed golden
+# images back onto the PR branch, so a reviewer sees the actual visual diff
+# in the PR instead of a pass/fail gate. Deliberately never blocks merging —
+# a human judges whether an image diff is a real regression. See
+# test/bdd/README.md.
+name: BDD golden images
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  update-goldens:
+    # Skip PRs from forks: they get a read-only GITHUB_TOKEN and can't push
+    # back to the PR branch (same guard as firebase-hosting-pull-request.yml).
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - run: npm ci
+      - run: npm install -g firebase-tools
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Playwright OS dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      # A failing scenario here is content, not a workflow error: still
+      # commit whatever golden images did get (re)written so a reviewer can
+      # see them, instead of losing the run to a red step.
+      - name: Run BDD scenarios, refreshing golden images
+        continue-on-error: true
+        run: npm run test:bdd:update
+
+      - name: Commit updated golden images, if any changed
+        if: always()
+        run: |
+          if [ -z "$(git status --porcelain -- test/bdd/goldens)" ]; then
+            echo "No golden image changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add test/bdd/goldens
+          git commit -m "Update BDD golden images"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}

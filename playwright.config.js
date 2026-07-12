@@ -1,8 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// BDD/golden-image tests. Scoped to public, unauthenticated pages for now —
-// authenticated pages (User/Supporter/Admin) need Firestore/Auth emulator +
-// seeded fixtures, which is a separate follow-up. See test/bdd/README.md.
+// BDD/golden-image tests. Auth-gated scenarios sign in against the
+// Firestore/Auth emulator (see test/bdd/support/emulatorAuth.js) — run via
+// `npm run test:bdd`, which starts the emulators for you. See
+// test/bdd/README.md.
 export default defineConfig({
   testDir: './test/bdd',
   fullyParallel: true,
@@ -16,6 +17,7 @@ export default defineConfig({
     command: 'npm run dev -- --port 5173 --strictPort',
     url: 'http://127.0.0.1:5173',
     reuseExistingServer: !process.env.CI,
+    env: { VITE_USE_EMULATORS: 'true' },
   },
   projects: [
     {
