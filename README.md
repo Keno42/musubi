@@ -37,6 +37,7 @@ npm run dev          # start Vite dev server
 npm run build        # production build
 npm run lint         # eslint
 npm run test:rules   # Firestore security rules tests (needs JAVA_HOME, see above)
+npm run test:bdd     # Playwright BDD / golden-image scenarios (see test/bdd/README.md)
 ```
 
 ## Emulator Suite

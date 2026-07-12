@@ -80,6 +80,10 @@ npm run lint && npm run build && npm run test:rules
 every PR and push. Hosting auto-deploys from `main`; sanity-check
 https://musubi-6fff3.web.app after merging.
 
+If you touched a public page's markup or copy, also run `npm run test:bdd`
+(Playwright golden-image scenarios, see `test/bdd/README.md`) and review any
+`--update-snapshots` diff by eye before committing. Not yet wired into CI.
+
 ## Map — keep this accurate
 
 ```
@@ -89,7 +93,9 @@ src/lib/         firestore.js = the only DB access layer; format.js, supportPoin
 src/auth/        login context (email-link auth)
 public/about.html  stakeholder one-pager (static, self-contained)
 firestore.rules  the security model — the most load-bearing file in the repo
-test/            rules tests
+test/            firestore.rules.test.mjs = rules tests; bdd/ = Playwright
+                 Given/When/Then scenarios + golden images (public pages only
+                 so far — see test/bdd/README.md)
 ```
 
 If your change makes this map wrong, update it here and be ready to defend the
