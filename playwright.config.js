@@ -6,7 +6,11 @@ import { defineConfig, devices } from '@playwright/test';
 // test/bdd/README.md.
 export default defineConfig({
   testDir: './test/bdd',
-  fullyParallel: true,
+  // Fixture-seeded scenarios share one Firestore/Auth emulator as backend
+  // state (see test/bdd/support/seed.js) and reset it in beforeEach, which
+  // isn't safe under parallel workers — run serially.
+  fullyParallel: false,
+  workers: 1,
   forbidOnly: !!process.env.CI,
   reporter: 'list',
   snapshotPathTemplate: '{testDir}/goldens/{arg}{ext}',
