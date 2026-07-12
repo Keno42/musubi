@@ -12,3 +12,6 @@ ui-debug.log
 *.log
 .DS_Store
 .claude/
+/playwright-report/
+/test-results/
+/blob-report/
