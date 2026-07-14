@@ -59,38 +59,36 @@ To point the app at emulators during `npm run dev`, set `VITE_USE_EMULATORS=true
 
 ## Deploy
 
-Hosting deploys automatically via GitHub Actions on every push to `main` (see
-`.github/workflows/firebase-hosting-merge.yml`). PRs get their own preview channel
-via `.github/workflows/firebase-hosting-pull-request.yml`.
+このリポジトリは「エンジン」であり、**自分がどこにデプロイされるかを知りません**。
+デプロイ先の識別情報 — FirebaseプロジェクトID・web設定・本番URL・実際の
+緊急連絡先 — はすべて GitHub の Environment **「Musubi」**(repoの
+Settings > Environments)の secrets として管理し、リポジトリのファイルには
+一切書きません。登録する secrets:
 
-Firestore rules are **not** auto-deployed — after changing `firestore.rules`,
-deploy manually:
+| Secret | 内容 |
+|---|---|
+| `FIREBASE_CONFIG` | Firebaseコンソールのweb設定を**厳密なJSON**(キーも引用符で囲む)にしたもの |
+| `FIREBASE_PROJECT_ID` | FirebaseプロジェクトID |
+| `FIREBASE_SERVICE_ACCOUNT` | Hostingデプロイ用のサービスアカウントJSON |
+| `EMERGENCY_CONTACT_NAME` / `EMERGENCY_CONTACT_EMAIL` / `EMERGENCY_CONTACT_PHONE` | 全ログイン後画面のフッターに出す緊急連絡先(未設定ならプレースホルダ表示のまま) |
+
+Hosting は `main` への push ごとに
+`.github/workflows/firebase-hosting-merge.yml` が自動デプロイします。上記の
+必須 secrets が未設定の場合はビルド前に失敗するので、emulator専用のdemo設定
+のまま本番に出ることはありません。
+
+Firestore rules は自動デプロイされません。`firestore.rules` を変更したら
+手動でデプロイします:
 
 ```sh
-firebase deploy --only firestore:rules
+firebase deploy --only firestore:rules --project <本番プロジェクトID>
 ```
 
 ⚠️ リポジトリの `firestore.rules` の管理者アドレスはプレースホルダです。
 そのままデプロイすると管理者が誰もいなくなります。デプロイ前に実際の
 運営アドレスへ置き換えてください(本番の実アドレスはリポジトリに含めない)。
 
-### 緊急連絡先(全ログイン後画面のフッター)
-
-同様にリポジトリには実際の連絡先を書きません。`EmergencyContactFooter.jsx`
-はプレースホルダを既定値とし、`VITE_EMERGENCY_CONTACT_NAME` /
-`VITE_EMERGENCY_CONTACT_EMAIL` / `VITE_EMERGENCY_CONTACT_PHONE` が設定されて
-いればそちらを表示します。本番ビルド(`firebase-hosting-merge.yml`)だけが
-GitHub の **Settings > Secrets and variables > Actions** に登録した同名の
-repository secrets (`EMERGENCY_CONTACT_NAME` 等)からこれを注入します。PR
-プレビューやローカル開発では未設定のままにし、プレースホルダを表示させて
-ください(プレビューURLは誰でも見られるため)。
-
-To deploy everything manually:
-
-```sh
-npm run build
-firebase deploy
-```
-
-Note: PR preview channels are for UI review only — test auth/Firestore flows
-locally via the Emulator Suite instead.
+ローカルから実プロジェクトへ接続・手動デプロイしたい場合は、gitignore済みの
+`.env.local` に `VITE_FIREBASE_CONFIG` を設定してからビルドしてください。
+未設定のビルドは Emulator Suite 専用のdemo設定になり、実プロジェクトには
+接続できません(意図的な設計です)。

@@ -1,5 +1,5 @@
-// 実際の連絡先はリポジトリに書かない。本番デプロイ時のみ GitHub Actions の
-// repository secrets から VITE_EMERGENCY_CONTACT_* として注入される
+// 実際の連絡先はリポジトリに書かない。本番デプロイ時のみ GitHub Environment
+// 「Musubi」の secrets から VITE_EMERGENCY_CONTACT_* として注入される
 // (.github/workflows/firebase-hosting-merge.yml 参照)。未設定時はここに書いた
 // プレースホルダのままになる。
 const CONTACT_NAME = import.meta.env.VITE_EMERGENCY_CONTACT_NAME || 'ごっちゃまぜカフェ運営担当 / 結び管理者';

@@ -38,7 +38,8 @@ now, record it in a GitHub issue instead of code.
   queries in components.
 - Any change to `firestore.rules` requires a matching test in `test/` and a
   passing `npm run test:rules`. Rules deploy is manual:
-  `firebase deploy --only firestore:rules` (CI only deploys Hosting).
+  `firebase deploy --only firestore:rules --project <id>` (CI only deploys
+  Hosting).
 - No real personal data in seeds, tests, screenshots, or docs.
 - Spark-plan assumptions hold: no Cloud Functions, no paid services, no real
   email sending. Anything that requires Blaze is out of scope by definition.
@@ -77,8 +78,10 @@ npm run lint && npm run build && npm run test:rules
 ```
 
 (`test:rules` needs Java 21+ on PATH — see README.) CI runs the same checks on
-every PR and push. Hosting auto-deploys from `main`; sanity-check
-https://musubi-6fff3.web.app after merging.
+every PR and push. Hosting auto-deploys from `main`; sanity-check the deployed
+site after merging. Deployment identity — project id, web config, production
+URL, real contact info — lives in the GitHub Environment "Musubi", never in
+this repo (see README "Deploy"). Don't add any of it to code or docs.
 
 If you touched a page's markup or copy, also run `npm run test:bdd`
 (Playwright golden-image scenarios, see `test/bdd/README.md`) and review any

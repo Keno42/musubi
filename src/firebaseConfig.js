@@ -1,11 +1,17 @@
-// Firebase Web SDK config. This is a public client identifier, not a secret —
-// safe to commit (see handoff doc sec.9). Security is enforced by
-// Firestore rules + Auth, not by hiding this object.
-export const firebaseConfig = {
-  apiKey: 'AIzaSyA6vA2PgGNaHyTbYnqJigkJ9wuqGgqAB18',
-  authDomain: 'musubi-6fff3.firebaseapp.com',
-  projectId: 'musubi-6fff3',
-  storageBucket: 'musubi-6fff3.firebasestorage.app',
-  messagingSenderId: '380302341234',
-  appId: '1:380302341234:web:c73397ebffcbcf9b8a3eeb',
-};
+// デプロイ先の識別情報(Firebaseプロジェクト)はこのrepoに置かない。
+// このrepoはエンジンで、自分がどこにデプロイされるかを知らない、という
+// レイヤ分離のため(値自体は公開identifierで秘密鍵ではない — handoff sec.9)。
+// 本番ビルドは GitHub Environment「Musubi」の secret FIREBASE_CONFIG
+// (コンソールのconfigを厳密なJSONにしたもの)を VITE_FIREBASE_CONFIG として
+// 注入する(.github/workflows/firebase-hosting-merge.yml 参照)。
+// 未設定時は Emulator Suite 専用の demo 設定になり、実プロジェクトには
+// 一切繋がらない。ローカルで実プロジェクトに繋ぎたい場合のみ、gitignore
+// 済みの .env.local に VITE_FIREBASE_CONFIG を書くこと。
+export const firebaseConfig = import.meta.env.VITE_FIREBASE_CONFIG
+  ? JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG)
+  : {
+      apiKey: 'demo-api-key',
+      authDomain: 'demo-musubi.firebaseapp.com',
+      projectId: 'demo-musubi',
+      appId: 'demo-app-id',
+    };
