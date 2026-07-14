@@ -74,6 +74,17 @@ firebase deploy --only firestore:rules
 そのままデプロイすると管理者が誰もいなくなります。デプロイ前に実際の
 運営アドレスへ置き換えてください(本番の実アドレスはリポジトリに含めない)。
 
+### 緊急連絡先(全ログイン後画面のフッター)
+
+同様にリポジトリには実際の連絡先を書きません。`EmergencyContactFooter.jsx`
+はプレースホルダを既定値とし、`VITE_EMERGENCY_CONTACT_NAME` /
+`VITE_EMERGENCY_CONTACT_EMAIL` / `VITE_EMERGENCY_CONTACT_PHONE` が設定されて
+いればそちらを表示します。本番ビルド(`firebase-hosting-merge.yml`)だけが
+GitHub の **Settings > Secrets and variables > Actions** に登録した同名の
+repository secrets (`EMERGENCY_CONTACT_NAME` 等)からこれを注入します。PR
+プレビューやローカル開発では未設定のままにし、プレースホルダを表示させて
+ください(プレビューURLは誰でも見られるため)。
+
 To deploy everything manually:
 
 ```sh

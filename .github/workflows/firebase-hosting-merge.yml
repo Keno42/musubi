@@ -12,6 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: npm ci && npm run build
+        env:
+          # 実際の連絡先はここでのみ本番ビルドに注入する。値はリポジトリではなく
+          # GitHub の Settings > Secrets and variables > Actions に登録する。
+          # 未設定なら EmergencyContactFooter.jsx のプレースホルダのまま安全に
+          # ビルドされる。PRプレビュー(firebase-hosting-pull-request.yml)には
+          # 意図的に渡さない — プレビューは誰でも見られるため。
+          VITE_EMERGENCY_CONTACT_NAME: ${{ secrets.EMERGENCY_CONTACT_NAME }}
+          VITE_EMERGENCY_CONTACT_EMAIL: ${{ secrets.EMERGENCY_CONTACT_EMAIL }}
+          VITE_EMERGENCY_CONTACT_PHONE: ${{ secrets.EMERGENCY_CONTACT_PHONE }}
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
