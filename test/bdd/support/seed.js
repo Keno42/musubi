@@ -57,7 +57,7 @@ const DEFAULT_NEED = {
   date: '2026-07-20',
   startTime: '10:00',
   endTime: '11:00',
-  publicArea: '西大井3丁目 / 西大井3丁目から2丁目',
+  publicArea: '西大井3丁目から2丁目',
   supportCategory: '通院などの外出',
   publicDistance: '近くまで(10分ほどの移動)',
   supportPoints: [],

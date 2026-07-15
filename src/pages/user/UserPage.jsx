@@ -203,7 +203,7 @@ function RegisterForm({ uid, onDone, onCancel }) {
       <StepCard step={3} title="おねがいカードの仕上げ" audience="サポーターのみなさんに公開されます">
         <div className="field-card">
           <label>
-            大まかな出発地と目的地(例: 西大井3丁目 / 西大井3丁目から2丁目 など)
+            大まかな出発地と目的地(例: 「西大井3丁目」や「西大井3丁目から2丁目」など)
             <input type="text" value={form.publicArea} onChange={set('publicArea')} className="input" required />
           </label>
         </div>
