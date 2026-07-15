@@ -61,28 +61,45 @@ To point the app at emulators during `npm run dev`, set `VITE_USE_EMULATORS=true
 
 このリポジトリは「エンジン」であり、**自分がどこにデプロイされるかを知りません**。
 デプロイ先の識別情報 — FirebaseプロジェクトID・web設定・本番URL・実際の
-緊急連絡先 — はすべて GitHub の Environment **「Musubi」**(repoの
-Settings > Environments)の secrets として管理し、リポジトリのファイルには
-一切書きません。登録する secrets:
+緊急連絡先 — はすべて GitHub の Environment(repoの Settings > Environments)
+の secrets として管理し、リポジトリのファイルには一切書きません。
+
+| Environment | 用途 |
+|---|---|
+| `Musubi` | 本番。deployment branches を `main` のみに制限しておくこと(作業ブランチを誤って本番に出せなくなる) |
+| `Musubi-Preview` | 本番反映前の確認用(任意)。**必ず本番とは別のFirebaseプロジェクト**を指すこと — 同じプロジェクト内の第2 Hostingサイトでは Firestore/Auth が本番と共有され、テスト用のおねがいが実際の利用者・サポーターに見えてしまう |
+
+各 Environment に登録する secrets(両方とも同じ名前一式):
 
 | Secret | 内容 |
 |---|---|
 | `FIREBASE_CONFIG` | Firebaseコンソールのweb設定を**厳密なJSON**(キーも引用符で囲む)にしたもの |
 | `FIREBASE_PROJECT_ID` | FirebaseプロジェクトID |
 | `FIREBASE_SERVICE_ACCOUNT` | Hostingデプロイ用のサービスアカウントJSON |
-| `EMERGENCY_CONTACT_NAME` / `EMERGENCY_CONTACT_EMAIL` / `EMERGENCY_CONTACT_PHONE` | 全ログイン後画面のフッターに出す緊急連絡先(未設定ならプレースホルダ表示のまま) |
+| `EMERGENCY_CONTACT_NAME` / `EMERGENCY_CONTACT_EMAIL` / `EMERGENCY_CONTACT_PHONE` | 全ログイン後画面のフッターに出す緊急連絡先(未設定ならプレースホルダ表示のまま。プレビューでは未設定のままが正解) |
 
-Hosting は `main` への push ごとに
-`.github/workflows/firebase-hosting-merge.yml` が自動デプロイします。上記の
-必須 secrets が未設定の場合はビルド前に失敗するので、emulator専用のdemo設定
-のまま本番に出ることはありません。
+デプロイの実行方法(`.github/workflows/deploy.yml`):
+
+- **本番**: `main` への push で自動デプロイ。
+- **secretsだけ変えたとき**(連絡先の変更など、コード変更なしの再デプロイ):
+  Actions タブ → 「Deploy Hosting」→ Run workflow → branch: `main`、
+  environment: `Musubi`。
+- **本番反映前の確認**: Run workflow → branch: 確認したいブランチ、
+  environment: `Musubi-Preview`(デフォルト)。プレビュープロジェクトの
+  固定URL(`<プレビュープロジェクトID>.web.app`)で確認できます。
+
+いずれも必須 secrets が未設定の場合はビルド前に失敗するので、emulator専用の
+demo設定のまま本番に出ることはありません。
 
 Firestore rules は自動デプロイされません。`firestore.rules` を変更したら
-手動でデプロイします:
+対象プロジェクト(本番・プレビュー各々)へ手動でデプロイします:
 
 ```sh
-firebase deploy --only firestore:rules --project <本番プロジェクトID>
+firebase deploy --only firestore:rules --project <対象プロジェクトID>
 ```
+
+プレビュープロジェクト側も初回だけ本番と同じセットアップ(Auth のメール
+リンク認証の有効化・Firestore 作成・rules デプロイ)が必要です。
 
 ⚠️ リポジトリの `firestore.rules` の管理者アドレスはプレースホルダです。
 そのままデプロイすると管理者が誰もいなくなります。デプロイ前に実際の
