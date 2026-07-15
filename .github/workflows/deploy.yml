@@ -1,23 +1,42 @@
-# Deploys Hosting on every push to main. All deployment identity — which
-# Firebase project, its web config, the emergency contact shown in the app —
-# lives in the GitHub Environment "Musubi" (Settings > Environments), never
-# in this repo. The repo is the engine; the Environment says where it runs.
-# Secrets expected in the Environment:
+# Deploys Hosting. Two ways to run:
+#
+#   - push to main: deploys production (GitHub Environment "Musubi").
+#   - Actions > "Deploy Hosting" > Run workflow: pick a branch and a target
+#     Environment. Use this to
+#       (a) redeploy production after changing only Environment secrets
+#           (branch: main, environment: Musubi), or
+#       (b) deploy any branch to the preview site for a pre-production check
+#           (environment: Musubi-Preview).
+#
+# Each Environment carries the full deployment identity — which Firebase
+# project, its web config, the emergency contact shown in the app — so this
+# repo never knows where it is deployed (Settings > Environments). Secrets
+# expected in each Environment:
 #   FIREBASE_CONFIG          Firebase web config as strict JSON (quoted keys)
 #   FIREBASE_PROJECT_ID      the Firebase project id
 #   FIREBASE_SERVICE_ACCOUNT service account JSON for the deploy action
 #   EMERGENCY_CONTACT_NAME / EMERGENCY_CONTACT_EMAIL / EMERGENCY_CONTACT_PHONE
 #     shown in the app's emergency footer (optional — placeholder if unset)
 # Secrets are used (not vars) so values are masked in public Actions logs.
-name: Deploy to Firebase Hosting on merge
+name: Deploy Hosting
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deploy target (GitHub Environment)
+        type: choice
+        # Preview first: an accidental default run must never hit production.
+        options:
+          - Musubi-Preview
+          - Musubi
+        default: Musubi-Preview
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
-    environment: Musubi
+    environment: ${{ inputs.environment || 'Musubi' }}
     steps:
       - uses: actions/checkout@v4
       # Refuse to ship a build carrying the emulator-only demo config: fail
@@ -33,7 +52,7 @@ jobs:
           [ -z "$FIREBASE_PROJECT_ID" ] && missing="$missing FIREBASE_PROJECT_ID"
           [ -z "$FIREBASE_SERVICE_ACCOUNT" ] && missing="$missing FIREBASE_SERVICE_ACCOUNT"
           if [ -n "$missing" ]; then
-            echo "::error::Environment 'Musubi' is missing secrets:$missing — see the header of this workflow file."
+            echo "::error::Environment '${{ inputs.environment || 'Musubi' }}' is missing secrets:$missing — see the header of this workflow file."
             exit 1
           fi
       - run: npm ci && npm run build
