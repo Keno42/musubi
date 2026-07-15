@@ -50,16 +50,27 @@ export async function createNeed(uid, form) {
   return needId;
 }
 
+// where()-only queries come back in document-id order — effectively random
+// for generated ids. Sort client-side (登録順): adding orderBy to a where()
+// query would require a composite index in production, and these lists stay
+// small enough that sorting here is free.
+function byCreatedAt(a, b) {
+  return (
+    (a.createdAt?.toMillis?.() ?? 0) - (b.createdAt?.toMillis?.() ?? 0) ||
+    (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+  );
+}
+
 export async function fetchOpenNeeds() {
   const q = query(collection(db, 'needsPublic'), where('status', '==', 'open'));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data());
+  return snap.docs.map((d) => d.data()).sort(byCreatedAt);
 }
 
 export async function fetchMyNeeds(uid) {
   const q = query(collection(db, 'needsPublic'), where('createdByUid', '==', uid));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data());
+  return snap.docs.map((d) => d.data()).sort(byCreatedAt);
 }
 
 export async function fetchNeedPublic(needId) {

@@ -1,9 +1,10 @@
 import { expect } from '@playwright/test';
 
 const AUTH_EMULATOR_ORIGIN = 'http://127.0.0.1:9099';
-// Matches src/firebaseConfig.js projectId. Duplicated as a literal (not
-// imported) so this test helper has no dependency on the app's module graph.
-const PROJECT_ID = 'musubi-6fff3';
+// Matches the emulator-only demo projectId in src/firebaseConfig.js.
+// Duplicated as a literal (not imported) so this test helper has no
+// dependency on the app's module graph.
+const PROJECT_ID = 'demo-musubi';
 
 // Completes the app's real email-link sign-in flow without a real inbox.
 // The Auth Emulator never sends mail — it records every "sent" link as a
