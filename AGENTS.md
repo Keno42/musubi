@@ -8,7 +8,8 @@ expected to leave the app *simpler* than they found it, or to justify why not.
 
 The spec is [`docs/musubi-v2.5-handoff.md`](./docs/musubi-v2.5-handoff.md).
 Its §3 defines what is deliberately **out of scope**; §13 lists ideas already
-parked for later. Check both before building anything.
+parked for later. Check both before building anything. The table at its top
+says what v3 changed; the reasoning is in `docs/feedback/`.
 
 ## Prime directive: weigh requests, don't just implement them
 
@@ -93,6 +94,11 @@ merge blocker, just a diff for a human to look at.
 
 ## Map — keep this accurate
 
+Shape: one screen per role owning its own state, a few shared pieces, one DB
+gateway. Imports go downward only (`pages → components / lib / auth →
+firebase`); there is no view-model or store layer — the page is the unit of
+change.
+
 ```
 src/pages/       one file per screen role (Top / User / Supporter / Admin)
 src/components/  shared pieces (currently 4 — keep it countable)
@@ -103,6 +109,7 @@ firestore.rules  the security model — the most load-bearing file in the repo
 test/            firestore.rules.test.mjs = rules tests; bdd/ = Playwright
                  Given/When/Then scenarios + golden images, incl. auth-gated
                  pages via the Auth emulator (see test/bdd/README.md)
+docs/            spec (handoff), decisions (feedback/), personas
 ```
 
 If your change makes this map wrong, update it here and be ready to defend the

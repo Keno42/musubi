@@ -7,7 +7,6 @@ import {
   where,
   orderBy,
   writeBatch,
-  updateDoc,
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -108,22 +107,10 @@ export async function fetchMyOffers(uid) {
   return snap.docs.map((d) => d.data());
 }
 
-export async function fetchOffersForNeed(needId) {
-  const q = query(collection(db, 'offers'), where('needId', '==', needId));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data());
-}
-
 // ---- matchings / matchDetails ----
 
 export async function fetchMatchingByOfferId(offerId) {
   const q = query(collection(db, 'matchings'), where('offerId', '==', offerId));
-  const snap = await getDocs(q);
-  return snap.empty ? null : snap.docs[0].data();
-}
-
-export async function fetchMatchingByNeedId(needId) {
-  const q = query(collection(db, 'matchings'), where('needId', '==', needId));
   const snap = await getDocs(q);
   return snap.empty ? null : snap.docs[0].data();
 }
@@ -182,8 +169,4 @@ export async function approveMatch(adminUid, need, offer, supplementNote) {
   });
   await batch.commit();
   return matchingId;
-}
-
-export async function updateNeedStatus(needId, status) {
-  await updateDoc(doc(db, 'needsPublic', needId), { status, updatedAt: serverTimestamp() });
 }
