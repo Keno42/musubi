@@ -8,8 +8,8 @@ expected to leave the app *simpler* than they found it, or to justify why not.
 
 The spec is [`docs/musubi-v2.5-handoff.md`](./docs/musubi-v2.5-handoff.md).
 Its §3 defines what is deliberately **out of scope**; §13 lists ideas already
-parked for later. Check both before building anything. v3 overrides parts of
-it — [`docs/README.md`](./docs/README.md) lists which, and what each doc is for.
+parked for later. Check both before building anything. The table at its top
+says what v3 changed; the reasoning is in `docs/feedback/`.
 
 ## Prime directive: weigh requests, don't just implement them
 
@@ -94,10 +94,10 @@ merge blocker, just a diff for a human to look at.
 
 ## Map — keep this accurate
 
-Shape: **one screen per role, each owning its own state**, on top of shared
-pieces and a single DB gateway. Imports only go downward
-(`pages → components / lib / auth → firebase`); there is no view-model or
-store layer, and the page is the unit of change.
+Shape: one screen per role owning its own state, a few shared pieces, one DB
+gateway. Imports go downward only (`pages → components / lib / auth →
+firebase`); there is no view-model or store layer — the page is the unit of
+change.
 
 ```
 src/pages/       one file per screen role (Top / User / Supporter / Admin)
@@ -109,21 +109,8 @@ firestore.rules  the security model — the most load-bearing file in the repo
 test/            firestore.rules.test.mjs = rules tests; bdd/ = Playwright
                  Given/When/Then scenarios + golden images, incl. auth-gated
                  pages via the Auth emulator (see test/bdd/README.md)
-docs/            spec, decisions, personas — docs/README.md says which is which
+docs/            spec (handoff), decisions (feedback/), personas
 ```
-
-Where a change goes:
-
-| Change | Where |
-|---|---|
-| A role's screen or flow | `src/pages/<role>/` only |
-| A Firestore read/write | `src/lib/firestore.js`, then `firestore.rules` + `test/firestore.rules.test.mjs` |
-| A Firestore field | classify public/private in handoff §6 first, then the row above |
-| Card vocabulary (categories, support points) | `src/lib/supportPoints.js` |
-| Notice/status wording | fixed by handoff §5 and the v3 overrides in `docs/README.md` — change the doc first |
-| A piece two roles share | `src/components/` — not before the second role needs it |
-| Styling | `src/index.css` |
-| A decision or its rationale | `docs/` or a GitHub issue, not a long code comment |
 
 If your change makes this map wrong, update it here and be ready to defend the
 growth in your PR.
