@@ -24,6 +24,8 @@ If the request conflicts with 1–3, say so and propose a smaller or safer
 version *before* coding. "Here is a leaner way to get what you actually want"
 is an expected answer, not insubordination. If an idea is good but not needed
 now, record it in a GitHub issue instead of code.
+Same bar for adding to this file or the docs: write it down only if it saves
+a reader three months from now real investigation time; otherwise leave it out.
 
 ## Invariants — never break these
 
